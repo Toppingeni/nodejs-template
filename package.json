@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/server.ts",
     "build": "tsc",
@@ -25,6 +27,9 @@
   },
   "devDependencies": {
     "@types/oracledb": "^6.5.4",
+    "@typescript-eslint/eslint-plugin": "^8.29.1",
+    "@typescript-eslint/parser": "^8.29.1",
+    "eslint": "^9.24.0",
     "module-alias": "^2.2.3"
   },
   "_moduleAliases": {
