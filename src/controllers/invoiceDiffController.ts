@@ -10,6 +10,16 @@ class InvoiceDiffController {
       next(error);
     }
   }
+
+  async getInvoiceSequelize(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const result = await invoiceDiffService.getInvoiceSequelize(limit);
+      res.json({ message: 'Invoice sequelize endpoint', data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new InvoiceDiffController();
