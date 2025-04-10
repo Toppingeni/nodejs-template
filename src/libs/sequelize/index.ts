@@ -2,9 +2,13 @@ import { Sequelize } from "sequelize";
 import { getConfig } from "./config";
 import { initModels } from "./models";
 
+let sequelizeInstance: Sequelize;
+
 export const initSequelize = async () => {
+    if (sequelizeInstance) return sequelizeInstance;
+
     const config = await getConfig();
-    const sequelize = new Sequelize(
+    sequelizeInstance = new Sequelize(
         config.database,
         config.username,
         config.password,
@@ -18,10 +22,22 @@ export const initSequelize = async () => {
         }
     );
 
-    await sequelize.authenticate();
+    await sequelizeInstance.authenticate();
     console.log("Sequelize connection established successfully");
-    initModels(sequelize);
-    return sequelize;
+    initModels(sequelizeInstance);
+    return sequelizeInstance;
 };
 
+const rawQuery = async (query: string) => {
+    const sequelize = await initSequelize();
+    try {
+        const res = await sequelize.query(query);
+        return res;
+    } catch (error) {
+        console.error("Error executing raw query:", error);
+        throw error;
+    }
+};
+
+export { rawQuery, sequelizeInstance };
 export default initSequelize;
