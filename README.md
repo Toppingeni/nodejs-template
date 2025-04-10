@@ -40,7 +40,7 @@ igs-vault setup-script http://192.168.55.25:8200 username password
 
 # load env
 igs-vault write global/data/dev/mac .env;
-igs-vault append stag/data/CostingCalcPriceApi .env;
+igs-vault append stag/data/invoice-diff .env;
 ```
 ## Running the API
 
