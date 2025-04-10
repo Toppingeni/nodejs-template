@@ -4,18 +4,6 @@ import { oracleConnection } from './oracledb'
 import type { CommandsSpType } from '@/types/oracleType'
 import { convertSQL } from '@/utils/sqlHelper'
 
-if (process.env.ORACLE_CLIENT_PATH) {
-  console.log('ORACLE_CLIENT_PATH', process.env.ORACLE_CLIENT_PATH)
-
-  try {
-    initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH })
-  } catch (err) {
-    console.error('Failed to initialize Oracle Client:', err)
-    throw new Error('Cannot load Oracle Client. Ensure ORACLE_CLIENT_PATH is set correctly.')
-  }
-} else {
-  console.warn('ORACLE_CLIENT_PATH is not set. Ensure the Oracle Client is installed and configured.')
-}
 
 class Oracle {
   dbName: string

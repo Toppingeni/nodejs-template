@@ -9,14 +9,17 @@ import invoiceDiffRouter from '@/routes/invoiceDiff';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Oracle client if path is provided
 if (process.env.ORACLE_CLIENT_PATH) {
+  console.log('ORACLE_CLIENT_PATH', process.env.ORACLE_CLIENT_PATH)
+
   try {
-    initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
+    initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH })
   } catch (err) {
-    console.error('Failed to initialize Oracle Client:', err);
-    process.exit(1);
+    console.error('Failed to initialize Oracle Client:', err)
+    throw new Error('Cannot load Oracle Client. Ensure ORACLE_CLIENT_PATH is set correctly.')
   }
+} else {
+  console.warn('ORACLE_CLIENT_PATH is not set. Ensure the Oracle Client is installed and configured.')
 }
 
 // Middleware
