@@ -1,7 +1,7 @@
 import type { Connection } from 'oracledb'
 import { getConnection } from 'oracledb'
 
-import { getConfig } from '@/libs/oracle/config'
+import { getConfig } from './config'
 
 export type IOracleDB = ReturnType<typeof oracleDB>
 

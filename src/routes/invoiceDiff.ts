@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import invoiceDiffController from '@/controllers/invoiceDiffController';
+import invoiceDiffController from '../controllers/invoiceDiffController';
 
 const router = Router();
 

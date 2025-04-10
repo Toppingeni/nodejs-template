@@ -1,4 +1,4 @@
-import { oracle } from '@/libs/oracle'
+import { oracle } from '../libs/oracle'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 
@@ -36,7 +36,7 @@ export async function createModel(table: string) {
 
     // Generate model content
     let modelContent = `import { DataTypes, Model } from 'sequelize'\n`
-    modelContent += `import sequelize from '@/libs/sequelize'\n\n`
+    modelContent += `import sequelize from '../libs/sequelize'\n\n`
     modelContent += `class ${table} extends Model {\n`
 
     // Add property declarations

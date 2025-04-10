@@ -1,5 +1,5 @@
-import invoiceModel from '@/repositories/invoiceModel';
-import Invoice from '@/models/invoiceSequelizeModel';
+import invoiceModel from '../repositories/invoiceModel';
+import Invoice from '../models/invoiceSequelizeModel';
 
 class InvoiceDiffService {
   async getInvoiceDiff() {

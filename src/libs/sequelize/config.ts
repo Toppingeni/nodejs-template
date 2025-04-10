@@ -1,6 +1,6 @@
 import { Dialect } from 'sequelize'
 import fs from 'fs'
-import type { ITns, ITnsConfig } from '@/types/oracleType'
+import type { ITns, ITnsConfig } from '../../types/oracleType'
 
 const tns = require('tns').default
 

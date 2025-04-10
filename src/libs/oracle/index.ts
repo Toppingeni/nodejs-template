@@ -1,8 +1,8 @@
 import oracledb, { initOracleClient } from 'oracledb'
 
 import { oracleConnection } from './oracledb'
-import type { CommandsSpType } from '@/types/oracleType'
-import { convertSQL } from '@/utils/sqlHelper'
+import type { CommandsSpType } from '../../types/oracleType'
+import { convertSQL } from '../../utils/sqlHelper'
 
 
 class Oracle {

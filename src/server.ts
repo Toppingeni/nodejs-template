@@ -1,10 +1,9 @@
 // Set application timezone to match server location
 process.env.TZ = 'Asia/Bangkok';
 
-import 'module-alias/register';
 import express from 'express';
 import { initOracleClient } from 'oracledb';
-import invoiceDiffRouter from '@/routes/invoiceDiff';
+import invoiceDiffRouter from './routes/invoiceDiff';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,7 +28,7 @@ app.use(express.json());
 app.use('/invoice-diff', invoiceDiffRouter);
 
 // Error handling
-import { errorHandler, notFoundHandler } from '@/middlewares/errorHandler'
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 
 // 404 Handler
 app.use(notFoundHandler)

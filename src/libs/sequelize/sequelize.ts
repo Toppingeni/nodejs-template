@@ -1,4 +1,4 @@
-import Sequelize = require('sequelize-oracle')
+import { Sequelize } from 'sequelize'
 import { getConfig } from './config'
 
 export const initSequelize = async () => {
@@ -17,7 +17,9 @@ export const initSequelize = async () => {
     logging: config.logging
   })
 
+  await sequelize.authenticate()
+  console.log('Sequelize connection established successfully')
   return sequelize
 }
 
-export default await initSequelize()
+export default initSequelize

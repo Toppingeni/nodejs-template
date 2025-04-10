@@ -1,5 +1,7 @@
 import { DataTypes, Model } from 'sequelize'
-import sequelize from '@/libs/sequelize'
+import getSequelize from '../libs/sequelize'
+
+const sequelize =  getSequelize()
 
 class Invoice extends Model {
   public id!: number

@@ -7,7 +7,7 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node src/server.ts",
+    "dev": "ts-node-dev --respawn src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
@@ -22,6 +22,7 @@
     "oracledb": "^6.8.0",
     "sequelize": "^6.37.7",
     "sequelize-oracle": "^3.3.2-0.0",
+    "tns": "^0.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
@@ -30,9 +31,6 @@
     "@typescript-eslint/eslint-plugin": "^8.29.1",
     "@typescript-eslint/parser": "^8.29.1",
     "eslint": "^9.24.0",
-    "module-alias": "^2.2.3"
-  },
-  "_moduleAliases": {
-    "@": "src"
+    "ts-node-dev": "^2.0.0"
   }
 }

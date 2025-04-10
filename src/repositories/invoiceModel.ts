@@ -1,4 +1,4 @@
-import Oracle from '@/libs/oracle';
+import Oracle from '../libs/oracle';
 
 class InvoiceModel {
   private oracle: Oracle;

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import invoiceDiffService from '@/services/invoiceDiffService';
+import invoiceDiffService from '../services/invoiceDiffService';
 
 class InvoiceDiffController {
   async getInvoiceDiff(req: Request, res: Response, next: NextFunction) {
