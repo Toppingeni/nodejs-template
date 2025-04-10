@@ -1,4 +1,8 @@
 import { Dialect } from 'sequelize'
+import fs from 'fs'
+import type { ITns, ITnsConfig } from '@/types/oracleType'
+
+const tns = require('tns').default
 
 export interface SequelizeConfig {
   username: string
@@ -10,12 +14,35 @@ export interface SequelizeConfig {
   logging?: boolean
 }
 
-export const getConfig = (): SequelizeConfig => ({
-  username: process.env.ORACLE_USER || '',
-  password: process.env.ORACLE_PWD || '',
-  database: 'YOUR_DB_NAME', // Need to replace with actual DB name
-  host: 'localhost', // Need to replace with actual host
-  port: 1521, // Default Oracle port
-  dialect: 'oracle',
-  logging: process.env.NODE_ENV === 'development'
-})
+function parseTnsConfig(con_tns: ITnsConfig) {
+  const address = con_tns.DESCRIPTION.ADDRESS_LIST.ADDRESS
+  return {
+    host: address.HOST,
+    port: address.PORT,
+    database: con_tns.DESCRIPTION.CONNECT_DATA.SID
+  }
+}
+
+export const getConfig = async (): Promise<SequelizeConfig> => {
+  const tnsPath = (process.env.TNS_PATH ? process.env.TNS_PATH : __dirname) + '/tnsnames.ora'
+  const content = fs.readFileSync(tnsPath, 'utf-8')
+  const allTns: ITns = tns(content)
+  const dbName = process.env.ORACLE_DB_NAME || 'ORCL'
+  
+  if (!allTns[dbName]) {
+    throw new Error(`TNS entry for ${dbName} not found`)
+  }
+
+  const { host, port, database } = parseTnsConfig(allTns[dbName])
+  const portNumber = parseInt(port, 10)
+
+  return {
+    username: process.env.ORACLE_USER || '',
+    password: process.env.ORACLE_PWD || '',
+    database,
+    host,
+    port: portNumber,
+    dialect: 'oracle',
+    logging: process.env.NODE_ENV === 'development'
+  }
+}
