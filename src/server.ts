@@ -1,3 +1,6 @@
+// Set application timezone to match server location
+process.env.TZ = 'Asia/Bangkok';
+
 import 'module-alias/register';
 import express from 'express';
 import { initOracleClient } from 'oracledb';
