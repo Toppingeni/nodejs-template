@@ -29,10 +29,13 @@ app.use(express.json());
 app.use('/invoice-diff', invoiceDiffRouter);
 
 // Error handling
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
+import { errorHandler, notFoundHandler } from '@/middlewares/errorHandler'
+
+// 404 Handler
+app.use(notFoundHandler)
+
+// Error Handler
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
