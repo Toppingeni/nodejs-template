@@ -67,11 +67,3 @@ process.on("SIGTERM", () => {
 //     createModel("SUPPLIER");
 // }
 // main();
-
-function main() {
-    // Placeholder for future functionality
-    rawQuery("SELECT * FROM SUPPLIER WHERE ROWNUM <= 10").then((result) => {
-        console.log("Query Result:", result);
-    });
-}
-main();
