@@ -1,4 +1,4 @@
-import invoiceModel from "../repositories/invoiceModel";
+import invoiceModel from "../repositories/invoiceRepository";
 import Invoice from "../libs/sequelize/models/invoiceModel";
 
 class InvoiceDiffService {
