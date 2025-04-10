@@ -1,37 +1,37 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response, NextFunction } from "express";
 
 interface ErrorResponse {
-  status: number
-  message: string
-  stack?: string
+    status: number;
+    message: string;
+    stack?: string;
 }
 
 export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
+    err: Error,
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) {
-  const statusCode = res.statusCode !== 200 ? res.statusCode : 500
-  const response: ErrorResponse = {
-    status: statusCode,
-    message: err.message
-  }
+    const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+    const response: ErrorResponse = {
+        status: statusCode,
+        message: err.message,
+    };
 
-  // Only show stack in development
-  if (process.env.NODE_ENV === 'development') {
-    response.stack = err.stack
-  }
+    // Only show stack in development
+    if (process.env.NODE_ENV === "development") {
+        response.stack = err.stack;
+    }
 
-  res.status(statusCode).json(response)
+    res.status(statusCode).json(response);
 }
 
 export function notFoundHandler(
-  req: Request,
-  res: Response,
-  next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) {
-  res.status(404)
-  const error = new Error(`Not Found - ${req.originalUrl}`)
-  next(error)
+    res.status(404);
+    const error = new Error(`Not Found - ${req.originalUrl}`);
+    next(error);
 }
