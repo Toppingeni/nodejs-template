@@ -60,3 +60,9 @@ process.on("SIGTERM", () => {
     console.log("Server shutting down...");
     process.exit(0);
 });
+
+// import { createModel } from "./utils/modelGenerator";
+// async function main() {
+//     createModel("SUPPLIER");
+// }
+// main();
