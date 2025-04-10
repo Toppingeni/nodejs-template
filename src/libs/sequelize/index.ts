@@ -1,27 +1,27 @@
-import { initSequelize } from './sequelize'
-import { getConfig } from './config'
+import { Sequelize } from "sequelize";
+import { getConfig } from "./config";
+import { initModels } from "../../models";
 
-import type { Sequelize } from 'sequelize'
-let sequelize: Sequelize | null = null
+export const initSequelize = async () => {
+    const config = await getConfig();
 
-// Initialize connection immediately
-initSequelize()
-  .then(conn => {
-    sequelize = conn
-  })
-  .catch(error => {
-    console.error('Unable to connect to the database:', error)
-  })
+    const sequelize = new Sequelize({
+        username: config.username,
+        password: config.password,
+        database: config.database,
+        host: config.host,
+        port: config.port,
+        dialect: config.dialect,
+        dialectOptions: {
+            connectString: `${config.host}:${config.port}/${config.database}`,
+        },
+        logging: config.logging,
+    });
 
-export { getConfig }
+    await sequelize.authenticate();
+    console.log("Sequelize connection established successfully");
+    initModels(sequelize);
+    return sequelize;
+};
 
-export const connect = () => {
-  return !!sequelize
-}
-
-export default () => {
-  if (!sequelize) {
-    throw new Error('Sequelize connection not initialized')
-  }
-  return sequelize
-}
+export default initSequelize;
