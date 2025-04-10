@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../libs/sequelize/models/usersModel";
 import usersService from "../services/usersService";
 
 class UserController {
