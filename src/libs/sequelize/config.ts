@@ -19,7 +19,6 @@ function parseTnsConfig(con_tns: ITnsConfig) {
     return {
         host: address.HOST,
         port: address.PORT,
-        database: con_tns.DESCRIPTION.CONNECT_DATA.SID,
     };
 }
 
@@ -35,13 +34,13 @@ export const getConfig = async (): Promise<SequelizeConfig> => {
         throw new Error(`TNS entry for ${dbName} not found`);
     }
 
-    const { host, port, database } = parseTnsConfig(allTns[dbName]);
+    const { host, port } = parseTnsConfig(allTns[dbName]);
     const portNumber = parseInt(port, 10);
 
     return {
         username: process.env.ORACLE_USER || "",
         password: process.env.ORACLE_PWD || "",
-        database,
+        database: dbName,
         host,
         port: portNumber,
         dialect: "oracle",

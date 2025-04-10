@@ -3,16 +3,19 @@ process.env.TZ = "Asia/Bangkok";
 
 import express from "express";
 import { initOracleClient } from "oracledb";
-import invoiceDiffRouter from "./routes/invoiceDiff";
 import dotenv from "dotenv";
+
+// Load environment variables first
 dotenv.config({
     path: `${__dirname}/../.env${
         process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
     }`,
 });
 
+// Now import other modules that depend on environment variables
 const app = express();
 const PORT = process.env.PORT || 3000;
+import invoiceDiffRouter from "./routes/invoiceDiff";
 console.log("ORACLE_CLIENT_PATH", process.env.ORACLE_CLIENT_PATH);
 if (process.env.ORACLE_CLIENT_PATH) {
     try {

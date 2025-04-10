@@ -4,7 +4,6 @@ import { initModels } from "../../models";
 
 export const initSequelize = async () => {
     const config = await getConfig();
-
     const sequelize = new Sequelize({
         username: config.username,
         password: config.password,
