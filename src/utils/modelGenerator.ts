@@ -1,4 +1,4 @@
-import Oracle from '@/libs/oracle'
+import { oracle } from '@/libs/oracle'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 
@@ -8,8 +8,6 @@ interface OracleColumn {
   DATA_LENGTH: number
   NULLABLE: 'Y' | 'N'
 }
-
-const oracle = new Oracle(process.env.ORACLE_DB_NAME || 'ORCL')
 
 // Map Oracle types to Sequelize types
 const typeMap: Record<string, string> = {

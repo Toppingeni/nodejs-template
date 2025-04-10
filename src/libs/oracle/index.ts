@@ -244,4 +244,6 @@ class Oracle {
   }
 }
 
+const oracleInstance = new Oracle(process.env.ORACLE_DB_NAME || 'ORCL')
+export { oracleInstance as oracle }
 export default Oracle
