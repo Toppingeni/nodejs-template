@@ -1,17 +1,17 @@
-import invoiceModel from '../repositories/invoiceModel';
-import Invoice from '../models/invoiceSequelizeModel';
+import invoiceModel from "../repositories/invoiceModel";
+import Invoice from "../libs/sequelize/models/invoiceModel";
 
 class InvoiceDiffService {
-  async getInvoiceDiff() {
-    return await invoiceModel.getInvoices();
-  }
+    async getInvoiceDiff() {
+        return await invoiceModel.getInvoices();
+    }
 
-  async getInvoiceSequelize(limit = 10) {
-    return await Invoice.findAll({
-      limit,
-      order: [['date', 'DESC']]
-    });
-  }
+    async getInvoiceSequelize(limit = 10) {
+        return await Invoice.findAll({
+            limit,
+            order: [["date", "DESC"]],
+        });
+    }
 }
 
 export default new InvoiceDiffService();

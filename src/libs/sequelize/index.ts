@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 import { getConfig } from "./config";
-import { initModels } from "../../models";
+import { initModels } from "./models";
 
 export const initSequelize = async () => {
     const config = await getConfig();

@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import { initTasksManager } from "./invoiceSequelizeModel";
+import { initTasksManager } from "./invoiceModel";
 import { initUserModel } from "./usersModel";
 
 export const initModels = (sequelize: Sequelize) => {
