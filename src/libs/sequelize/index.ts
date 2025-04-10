@@ -14,6 +14,7 @@ export const initSequelize = async () => {
             dialect: config.dialect,
             logging: config.logging,
             dialectModule: require("oracledb"),
+            quoteIdentifiers: config.quoteIdentifiers,
         }
     );
 

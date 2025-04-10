@@ -14,6 +14,7 @@ export interface SequelizeConfig {
     dialect: Dialect;
     logging?: boolean | ((sql: string, timing?: number) => void);
     tnsConnectString: string;
+    quoteIdentifiers?: boolean;
 }
 
 function parseTnsConfig(con_tns: ITnsConfig) {
@@ -46,7 +47,11 @@ export const getConfig = async (): Promise<SequelizeConfig> => {
         host,
         port: portNumber,
         dialect: "oracle",
-        logging: process.env.NODE_ENV === "development" ? console.log : false,
+        logging: (e) => {
+            // Custom logging function
+            console.log("SQL executed", e);
+        },
+        quoteIdentifiers: false,
         tnsConnectString,
     };
 };
