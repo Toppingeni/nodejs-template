@@ -1,6 +1,7 @@
 import { Dialect } from "sequelize";
 import fs from "fs";
 import type { ITns, ITnsConfig } from "../../types/oracleType";
+import { getTnsString } from "../../utils/databaseHelper";
 
 const tns = require("tns").default;
 
@@ -11,7 +12,8 @@ export interface SequelizeConfig {
     host: string;
     port: number;
     dialect: Dialect;
-    logging?: boolean;
+    logging?: boolean | ((sql: string, timing?: number) => void);
+    tnsConnectString: string;
 }
 
 function parseTnsConfig(con_tns: ITnsConfig) {
@@ -29,7 +31,7 @@ export const getConfig = async (): Promise<SequelizeConfig> => {
     const content = fs.readFileSync(tnsPath, "utf-8");
     const allTns: ITns = tns(content);
     const dbName = process.env.ORACLE_DB_NAME || "ORCL";
-
+    const tnsConnectString: string = getTnsString(allTns[dbName]);
     if (!allTns[dbName]) {
         throw new Error(`TNS entry for ${dbName} not found`);
     }
@@ -44,6 +46,7 @@ export const getConfig = async (): Promise<SequelizeConfig> => {
         host,
         port: portNumber,
         dialect: "oracle",
-        logging: process.env.NODE_ENV === "development",
+        logging: process.env.NODE_ENV === "development" ? console.log : false,
+        tnsConnectString,
     };
 };
