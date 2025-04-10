@@ -15,7 +15,7 @@ dotenv.config({
 // Now import other modules that depend on environment variables
 const app = express();
 const PORT = process.env.PORT || 3000;
-import invoiceDiffRouter from "./routes/invoiceDiff";
+import router from "./routes";
 console.log("ORACLE_CLIENT_PATH", process.env.ORACLE_CLIENT_PATH);
 if (process.env.ORACLE_CLIENT_PATH) {
     try {
@@ -36,7 +36,7 @@ if (process.env.ORACLE_CLIENT_PATH) {
 app.use(express.json());
 
 // Routes
-app.use("/invoice-diff", invoiceDiffRouter);
+app.use("/", router);
 
 // Error handling
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
