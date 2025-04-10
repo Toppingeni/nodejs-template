@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import Oracle from '@/libs/oracle/index';
+import Oracle from '@/libs/oracle';
 
 const router = Router();
 const oracle = new Oracle('YOUR_DB_NAME'); // TODO: Replace with actual Oracle DB name from config
