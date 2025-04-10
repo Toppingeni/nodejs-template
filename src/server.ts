@@ -40,7 +40,6 @@ app.use("/", router);
 
 // Error handling
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
-import { oracle } from "./libs/oracle";
 
 // 404 Handler
 app.use(notFoundHandler);
