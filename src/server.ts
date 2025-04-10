@@ -50,3 +50,13 @@ app.use(errorHandler);
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// exit
+process.on("SIGINT", () => {
+    console.log("Server shutting down...");
+    process.exit(0);
+});
+process.on("SIGTERM", () => {
+    console.log("Server shutting down...");
+    process.exit(0);
+});
