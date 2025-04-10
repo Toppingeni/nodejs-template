@@ -27,7 +27,7 @@ class Oracle {
   const params = { id: 101 }
   const result = await command(sql, params, options)
   */
-    async query<T>(sql: string, params: oracledb.BindParameters[] = []) {
+    async query<T>(sql: string, params: oracledb.BindParameters = {}) {
         return await oracleConnection(this.dbName, async (connection) => {
             try {
                 const result = await connection.execute<T>(
