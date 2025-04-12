@@ -25,9 +25,22 @@ if (process.env.ORACLE_CLIENT_PATH) {
         "ORACLE_CLIENT_PATH is not set. Ensure the Oracle Client is installed and configured."
     );
 }
-import router from "./routes";
+
 // Error handling
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
+import { initSequelize } from "./libs/sequelize";
+
+// Initialize Sequelize before starting the server
+(async () => {
+    try {
+        await initSequelize();
+        console.log("Database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize database:", error);
+        process.exit(1);
+    }
+})();
+import router from "./routes";
 
 // Now import other modules that depend on environment variables
 const app = express();

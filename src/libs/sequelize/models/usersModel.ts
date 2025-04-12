@@ -1,5 +1,4 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
-import getSequelize from "..";
 
 class User extends Model {
     public user_id!: number;

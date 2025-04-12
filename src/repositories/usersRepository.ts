@@ -2,7 +2,9 @@ import User from "../libs/sequelize/models/usersModel";
 
 class UserRepository {
     async getUsers() {
-        return await User.findAll();
+        const res = await User.findAll();
+        console.log(res);
+        return res;
     }
 }
 
