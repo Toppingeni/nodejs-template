@@ -4,18 +4,12 @@ process.env.TZ = "Asia/Bangkok";
 import express from "express";
 import { initOracleClient } from "oracledb";
 import dotenv from "dotenv";
-
 // Load environment variables first
 dotenv.config({
     path: `${__dirname}/../.env${
         process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
     }`,
 });
-
-// Now import other modules that depend on environment variables
-const app = express();
-const PORT = process.env.PORT || 3000;
-import router from "./routes";
 console.log("ORACLE_CLIENT_PATH", process.env.ORACLE_CLIENT_PATH);
 if (process.env.ORACLE_CLIENT_PATH) {
     try {
@@ -31,16 +25,18 @@ if (process.env.ORACLE_CLIENT_PATH) {
         "ORACLE_CLIENT_PATH is not set. Ensure the Oracle Client is installed and configured."
     );
 }
+import router from "./routes";
+// Error handling
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 
+// Now import other modules that depend on environment variables
+const app = express();
+const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 
 // Routes
 app.use("/", router);
-
-// Error handling
-import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
-import { rawQuery } from "./libs/sequelize";
 
 // 404 Handler
 app.use(notFoundHandler);
