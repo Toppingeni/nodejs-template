@@ -1,8 +1,14 @@
 import fs from "fs";
 
-import type { ITns, ITnsConfig } from "../../types/oracleType";
+import type { ITns } from "../../types/oracleType";
 import { getTnsString } from "../../utils/databaseHelper";
-
+import dotenv from "dotenv";
+// Load environment variables first
+dotenv.config({
+    path: `${__dirname}/../.env${
+        process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
+    }`,
+});
 const tns = require("tns").default;
 
 export const getConfig = async () => {
