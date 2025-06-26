@@ -6,6 +6,7 @@ import { convertSQL } from "../../utils/sqlHelper";
 
 class Oracle {
     dbName: string;
+    appID: string;
     options = {
         autoCommit: false,
         outFormat: oracledb.OUT_FORMAT_OBJECT,
@@ -14,8 +15,9 @@ class Oracle {
         autoCommit: false,
         batchErrors: true,
     };
-    constructor(dbName: string) {
-        this.dbName = dbName;
+    constructor(dbName?: string, appID?: string) {
+        this.dbName = dbName || process.env.ORACLE_DB_NAME!;
+        this.appID = appID || process.env.APP_ID!;
     }
 
     /*
@@ -27,14 +29,17 @@ class Oracle {
   const params = { id: 101 }
   const result = await command(sql, params, options)
   */
-    async query<T>(sql: string, params: oracledb.BindParameters = {}) {
+    async query<T>(
+        sql: string,
+        params: oracledb.BindParameters = {},
+        options?: oracledb.ExecuteOptions
+    ) {
         return await oracleConnection(this.dbName, async (connection) => {
             try {
-                const result = await connection.execute<T>(
-                    sql,
-                    params,
-                    this.options
-                );
+                const result = await connection.execute<T>(sql, params, {
+                    ...this.options,
+                    ...options,
+                });
 
                 return result.rows ? result.rows : [];
             } catch (error: any) {
@@ -47,7 +52,7 @@ class Oracle {
     }
 
     async queries<T>(
-        queries: { sql: string; params: oracledb.BindParameters[] }[]
+        queries: { sql: string; params: oracledb.BindParameters }[]
     ) {
         await oracleConnection(this.dbName, async (connection) => {
             try {
@@ -73,7 +78,7 @@ class Oracle {
         });
     }
 
-    async command<T>(sql: string, params: oracledb.BindParameters[] = []) {
+    async command<T>(sql: string, params: oracledb.BindParameters) {
         return await oracleConnection(this.dbName, async (connection) => {
             try {
                 const result = await connection.execute<T>(
@@ -97,7 +102,7 @@ class Oracle {
     }
 
     async commands<T>(
-        commands: { sql: string; params: oracledb.BindParameters[] }[]
+        commands: { sql: string; params: oracledb.BindParameters }[]
     ) {
         return await oracleConnection(this.dbName, async (connection) => {
             try {
@@ -287,6 +292,56 @@ class Oracle {
                 );
             }
         });
+    }
+
+    async getSqlStmt(sqlNo: number, _appId?: number): Promise<string> {
+        try {
+            const appId = _appId ?? this.appID;
+            const sqlTab = `SELECT  SQL_STMT FROM KPDBA.SQL_TAB_OPPN sto WHERE app_id = ${appId} AND sql_no = ${sqlNo}`;
+
+            // ลองใช้ oracledb.STRING.num แล้วไม่ได้เลยต้อง cast แบบนี้
+            const result = await this.query<{ SQL_STMT: string }>(sqlTab, [], {
+                fetchInfo: {
+                    SQL_STMT: { type: oracledb.STRING },
+                } as any,
+            });
+
+            return result[0].SQL_STMT;
+        } catch (error: any) {
+            throw new Error(error.message);
+        }
+    }
+
+    async queryFromSqlTab<T>(
+        sqlNo: number,
+        params: oracledb.BindParameters
+    ): Promise<T[]> {
+        try {
+            const sql = await this.getSqlStmt(sqlNo);
+
+            // console.log(sql)
+
+            const result = await this.query<T>(sql as string, params);
+
+            return result;
+        } catch (error: any) {
+            throw new Error(error.message);
+        }
+    }
+
+    async commandFromSqlTab<T>(
+        sqlNo: number,
+        params: oracledb.BindParameters
+    ): Promise<oracledb.Result<T>> {
+        try {
+            const sql = await this.getSqlStmt(sqlNo);
+
+            const result = await this.command<T>(sql as string, params);
+
+            return result;
+        } catch (error: any) {
+            throw new Error(error.message);
+        }
     }
 }
 

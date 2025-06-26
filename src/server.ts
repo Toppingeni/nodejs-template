@@ -40,13 +40,23 @@ import { initSequelize } from "./libs/sequelize";
         process.exit(1);
     }
 })();
-import router from "./routes";
 
+import router from "./routes";
+import cors from "cors";
 // Now import other modules that depend on environment variables
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
+app.use(
+    cors({
+        origin: [
+            "http://192.168.55.38:51106",
+            "http://localhost:3101",
+            "http://localhost:3000",
+        ],
+    })
+);
 
 // Routes
 app.use("/", router);

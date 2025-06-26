@@ -18,6 +18,7 @@
         "@types/express": "^5.0.1",
         "@types/node": "^22.14.0",
         "@types/sequelize": "^4.28.20",
+        "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^5.1.0",
         "oracledb": "^6.8.0",
@@ -28,6 +29,7 @@
         "typescript": "^5.8.3"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.19",
         "@types/oracledb": "^6.5.4",
         "@typescript-eslint/eslint-plugin": "^8.29.1",
         "@typescript-eslint/parser": "^8.29.1",

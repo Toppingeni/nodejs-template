@@ -1,8 +1,13 @@
 import type { Connection } from "oracledb";
 import { getConnection } from "oracledb";
-
 import { getConfig } from "./config";
-
+import dotenv from "dotenv";
+// Load environment variables first
+dotenv.config({
+    path: `${__dirname}/../.env${
+        process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
+    }`,
+});
 export type IOracleDB = ReturnType<typeof oracleDB>;
 
 async function oracleDB(mode: string) {
