@@ -4,6 +4,7 @@ import type { ITns, ITnsConfig } from "../../types/oracleType";
 import { getTnsString } from "../../utils/databaseHelper";
 
 const tns = require("tns").default;
+import { logger } from "../../utils/logger";
 
 export interface SequelizeConfig {
     username: string;
@@ -47,9 +48,9 @@ export const getConfig = async (): Promise<SequelizeConfig> => {
         host,
         port: portNumber,
         dialect: "oracle",
-        logging: (e) => {
-            // Custom logging function
-            console.log("SQL executed", e);
+        logging: (sql, timing) => {
+            // Forward Sequelize logs to standard project logger
+            logger.logSQL(sql, undefined, timing);
         },
         quoteIdentifiers: false,
         tnsConnectString,

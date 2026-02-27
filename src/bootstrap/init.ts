@@ -32,11 +32,11 @@ export const initializeDatabases = async () => {
     }
 
     // 3. Initialize Sequelize
-    try {
-        await initSequelize();
-        console.log("Database initialized successfully via Sequelize");
-    } catch (error) {
-        console.error("Failed to initialize Database (Sequelize):", error);
-        throw error;
-    }
+    // try {
+    //     await initSequelize();
+    //     console.log("Database initialized successfully via Sequelize");
+    // } catch (error) {
+    //     console.error("Failed to initialize Database (Sequelize):", error);
+    //     throw error;
+    // }
 };
