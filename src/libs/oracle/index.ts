@@ -318,7 +318,7 @@ class Oracle {
       const startTime = Date.now();
       const result = await this.query<{ SQL_STMT: string }>(sqlTab, [], {
         fetchInfo: {
-          SQL_STMT: { type: oracledb.STRING },
+          SQL_STMT: { type: oracledb.STRING as unknown as number },
         },
       });
 
