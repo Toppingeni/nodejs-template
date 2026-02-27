@@ -61,7 +61,7 @@ class Oracle {
    * @returns Array of query results
    */
   async queries<T>(queries: { sql: string; params: oracledb.BindParameters }[]) {
-    await oracleConnection(this.dbName, async (connection) => {
+    return await oracleConnection(this.dbName, async (connection) => {
       try {
         const results = await Promise.all(
           queries.map(async (query) => {
