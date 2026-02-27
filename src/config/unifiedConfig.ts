@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    NODE_ENV: z.enum(["development", "dev", "production", "prod", "staging", "stag"]).default("development"),
     PORT: z.coerce.number().default(3000),
-    ORACLE_CLIENT_PATH: z.string().optional(),
-    ORACLE_DB_NAME: z.string().optional(),
-    APP_ID: z.string().optional(),
+    ORACLE_CLIENT_PATH: z.string(),
+    ORACLE_DB_NAME: z.string(),
+    APP_ID: z.string(),
     JWT_SECRET: z.string().optional(),
     ENABLE_LOGGING: z.coerce.boolean().default(true),
     LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARN", "ERROR"]).default("DEBUG"),
