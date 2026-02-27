@@ -3,6 +3,7 @@ import { oracleConnection } from './oracledb';
 import { CommandsSpType } from '../../types/oracleType';
 import { convertSQL } from '../../utils/sqlHelper';
 import { logger } from '../../utils/logger';
+import { config } from "../../config/unifiedConfig";
 
 /**
  * Oracle Database utility class
@@ -21,8 +22,8 @@ class Oracle {
   };
 
   constructor(dbName?: string, appID?: string) {
-    this.dbName = dbName || process.env.ORACLE_DB_NAME!;
-    this.appID = appID || process.env.APP_ID!;
+    this.dbName = dbName || config.ORACLE_DB_NAME!;
+    this.appID = appID || config.APP_ID!;
   }
 
   /**
@@ -370,6 +371,6 @@ class Oracle {
 }
 
 // Export singleton instance
-const oracleInstance = new Oracle(process.env.ORACLE_DB_NAME || 'ORCL', process.env.APP_ID || '');
+const oracleInstance = new Oracle(config.ORACLE_DB_NAME || 'ORCL', config.APP_ID || '');
 export { oracleInstance as oracle };
 export default Oracle;

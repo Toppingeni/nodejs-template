@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { logger } from "../utils/logger";
 
 export abstract class BaseController {
     /**
@@ -16,7 +17,7 @@ export abstract class BaseController {
      * แต่จะโยนเป็น Error ออกไปเพื่อเข้าสู่ Pipeline
      */
     protected handleError(error: unknown, methodName: string): never {
-        // สามารถเพิ่มการบันทึก log/Sentry ได้ที่ตรงนี้ (เช่น Sentry.captureException(error);)
+        logger.error(`Error in ${methodName}:`, error);
         throw error;
     }
 }

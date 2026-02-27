@@ -1,12 +1,13 @@
 import Oracle from "../libs/oracle";
+import { config } from "../config/unifiedConfig";
 
 class TransRepository {
     private oracle: Oracle;
 
     constructor() {
         this.oracle = new Oracle(
-            process.env.ORACLE_DB_NAME,
-            process.env.APP_ID
+            config.ORACLE_DB_NAME,
+            config.APP_ID
         );
     }
 

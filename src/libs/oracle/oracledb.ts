@@ -1,6 +1,7 @@
 import type { Connection } from "oracledb";
 import * as oracledb from "oracledb";
 import { getConfig } from "./config";
+import { config } from "../../config/unifiedConfig";
 import dotenv from "dotenv";
 // Load environment variables first
 dotenv.config({
@@ -13,9 +14,9 @@ export type IOracleDB = ReturnType<typeof oracleDB>;
 const poolAlias = "defaultPool";
 
 async function oracleDB(mode: string) {
-    const config = await getConfig();
+    const appConfig = await getConfig();
 
-    if (!config[mode]) throw new Error("Oracle connection string not found");
+    if (!appConfig[mode]) throw new Error("Oracle connection string not found");
 
     // Initialize the connection pool if it doesn't already exist
     try {
@@ -23,9 +24,9 @@ async function oracleDB(mode: string) {
     } catch (err) {
         // Pool is not found, so create a new one
         await oracledb.createPool({
-            user: process.env.ORACLE_USER || "",
-            password: process.env.ORACLE_PWD || "",
-            connectString: config[mode],
+            user: config.ORACLE_USER || "",
+            password: config.ORACLE_PWD || "",
+            connectString: appConfig[mode],
             poolAlias: poolAlias,
             poolMin: 2,
             poolMax: 10,

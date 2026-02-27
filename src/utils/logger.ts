@@ -1,4 +1,5 @@
 import { context } from './context';
+import { config } from '../config/unifiedConfig';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,9 +18,9 @@ export class Logger {
 
   private constructor() {
     // Config จาก Environment Variables
-    this.enabled = process.env.ENABLE_LOGGING !== 'false';
-    this.logLevel = this.parseLogLevel(process.env.LOG_LEVEL || 'INFO');
-    this.wsLogServerUrl = process.env.WS_LOG_SERVER_URL;
+    this.enabled = config.ENABLE_LOGGING !== false;
+    this.logLevel = this.parseLogLevel(config.LOG_LEVEL || 'INFO');
+    this.wsLogServerUrl = config.WS_LOG_SERVER_URL;
   }
 
   public static getInstance(): Logger {
@@ -98,28 +99,28 @@ export class Logger {
 
   public error(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      if (process.env.NODE_ENV === 'development') console.error(this.formatMessage('ERROR', message, meta));
+      if (config.NODE_ENV === 'development') console.error(this.formatMessage('ERROR', message, meta));
       this.sendToWsServer('ERROR', message, meta);
     }
   }
 
   public warn(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      if (process.env.NODE_ENV === 'development') console.warn(this.formatMessage('WARN', message, meta));
+      if (config.NODE_ENV === 'development') console.warn(this.formatMessage('WARN', message, meta));
       this.sendToWsServer('WARN', message, meta);
     }
   }
 
   public info(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      if (process.env.NODE_ENV === 'development') console.log(this.formatMessage('INFO', message, meta));
+      if (config.NODE_ENV === 'development') console.log(this.formatMessage('INFO', message, meta));
       this.sendToWsServer('INFO', message, meta);
     }
   }
 
   public debug(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      if (process.env.NODE_ENV === 'development') console.log(this.formatMessage('DEBUG', message, meta));
+      if (config.NODE_ENV === 'development') console.log(this.formatMessage('DEBUG', message, meta));
       this.sendToWsServer('DEBUG', message, meta);
     }
   }
