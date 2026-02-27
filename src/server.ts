@@ -10,10 +10,12 @@ dotenv.config({
         process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
     }`,
 });
-console.log("ORACLE_CLIENT_PATH", process.env.ORACLE_CLIENT_PATH);
-if (process.env.ORACLE_CLIENT_PATH) {
+import { config } from "./config/unifiedConfig";
+
+console.log("ORACLE_CLIENT_PATH", config.ORACLE_CLIENT_PATH);
+if (config.ORACLE_CLIENT_PATH) {
     try {
-        initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
+        initOracleClient({ libDir: config.ORACLE_CLIENT_PATH });
     } catch (err) {
         console.error("Failed to initialize Oracle Client:", err);
         throw new Error(
@@ -46,7 +48,7 @@ import router from "./routes";
 import cors from "cors";
 // Now import other modules that depend on environment variables
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.PORT;
 // Middleware
 app.use(express.json());
 app.use(contextMiddleware);
