@@ -28,6 +28,7 @@ if (process.env.ORACLE_CLIENT_PATH) {
 
 // Error handling
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
+import { contextMiddleware } from "./middlewares/contextMiddleware";
 // import { initSequelize } from "./libs/sequelize";
 
 //// Initialize Sequelize before starting the server
@@ -48,6 +49,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
+app.use(contextMiddleware);
 app.use(
     cors({
         origin: [
