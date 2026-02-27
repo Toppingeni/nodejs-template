@@ -5,7 +5,6 @@ import { initModels } from "./models";
 let sequelizeInstance: Sequelize;
 
 export const initSequelize = async () => {
-    console.log("A");
     if (sequelizeInstance) return sequelizeInstance;
 
     const config = await getConfig();

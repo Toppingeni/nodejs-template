@@ -1,11 +1,12 @@
-import User from "../libs/sequelize/models/usersModel";
 import usersRepository from "../repositories/usersRepository";
 
-class UserService {
+export class UserService {
+    // Injecting the repository ensures dependency injection principles are met for testing
+    constructor(private readonly repo: typeof usersRepository) {}
+
     async getUsers() {
-        const users = usersRepository.getUsers();
-        return users;
+        return await this.repo.getUsers();
     }
 }
 
-export default new UserService();
+export default new UserService(usersRepository);

@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import usersService from "../services/usersService";
+import { BaseController } from "./BaseController";
 
-class UserController {
-    async getUsers(req: Request, res: Response, next: NextFunction) {
+class UserController extends BaseController {
+    public getUsers = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const result = await usersService.getUsers();
-            res.json({ message: "Invoice diff endpoint", data: result });
+            this.handleSuccess(res, result, "Invoice diff endpoint");
         } catch (error) {
-            next(error);
+            this.handleError(error, "getUsers");
         }
     }
 }

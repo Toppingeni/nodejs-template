@@ -22,8 +22,8 @@ A REST API for comparing invoice data between Oracle and other systems using bot
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/invoice-diff.git
-cd invoice-diff
+git clone https://github.com/your-repo.git
+cd your-repo
 ```
 
 2. Install dependencies:
@@ -41,9 +41,17 @@ npm i @ingeni/igs-vault -g
 # login to igs-vault
 igs-vault setup-script http://192.168.55.25:8200 username password
 
-# load env
-igs-vault write global/data/dev/mac .env;
-igs-vault append stag/data/xxxxx .env;
+# load global env
+# 1. load app env
+igs-vault write stag/data/xxxx .env;
+# 2. load app env
+## MAC
+igs-vault append global/data/dev/mac .env;
+## LINUX
+igs-vault append global/data/dev/linux .env
+## Windows
+igs-vault append global/data/dev/windows .env
+
 ```
 
 ## Running the API

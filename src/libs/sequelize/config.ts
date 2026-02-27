@@ -4,6 +4,8 @@ import type { ITns, ITnsConfig } from "../../types/oracleType";
 import { getTnsString } from "../../utils/databaseHelper";
 
 const tns = require("tns").default;
+import { logger } from "../../utils/logger";
+import { config } from "../../config/unifiedConfig";
 
 export interface SequelizeConfig {
     username: string;
@@ -27,11 +29,11 @@ function parseTnsConfig(con_tns: ITnsConfig) {
 
 export const getConfig = async (): Promise<SequelizeConfig> => {
     const tnsPath =
-        (process.env.TNS_PATH ? process.env.TNS_PATH : __dirname) +
+        (config.TNS_PATH ? config.TNS_PATH : __dirname) +
         "/tnsnames.ora";
     const content = fs.readFileSync(tnsPath, "utf-8");
     const allTns: ITns = tns(content);
-    const dbName = process.env.ORACLE_DB_NAME || "ORCL";
+    const dbName = config.ORACLE_DB_NAME || "ORCL";
     const tnsConnectString: string = getTnsString(allTns[dbName]);
     if (!allTns[dbName]) {
         throw new Error(`TNS entry for ${dbName} not found`);
@@ -41,15 +43,15 @@ export const getConfig = async (): Promise<SequelizeConfig> => {
     const portNumber = parseInt(port, 10);
 
     return {
-        username: process.env.ORACLE_USER || "",
-        password: process.env.ORACLE_PWD || "",
+        username: config.ORACLE_USER || "",
+        password: config.ORACLE_PWD || "",
         database: dbName,
         host,
         port: portNumber,
         dialect: "oracle",
-        logging: (e) => {
-            // Custom logging function
-            console.log("SQL executed", e);
+        logging: (sql, timing) => {
+            // Forward Sequelize logs to standard project logger
+            logger.logSQL(sql, undefined, timing);
         },
         quoteIdentifiers: false,
         tnsConnectString,
