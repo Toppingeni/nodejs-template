@@ -13,7 +13,11 @@ dotenv.config({
     }`,
 });
 
-import { config, initVaultConfig } from "./config/unifiedConfig";
+import {
+    config,
+    initLocalEnvConfig,
+    initVaultConfig,
+} from "./config/unifiedConfig";
 import { initializeDatabases } from "./bootstrap/init";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
@@ -22,6 +26,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./tsoa/swagger.json";
 import { RegisterRoutes } from "./tsoa/routes";
 import { requestLogger } from "./middlewares/requestLogger";
+import { getErrorMessage } from "./utils/error";
 
 const app = express();
 
@@ -62,7 +67,14 @@ app.use(errorHandler);
 const startServer = async () => {
     try {
         // Initialize Vault/Config first
-        await initVaultConfig();
+        try {
+            await initVaultConfig();
+        } catch (error) {
+            console.warn(
+                `[Config Warning] initVaultConfig failed, falling back to local env: ${getErrorMessage(error)}`,
+            );
+            await initLocalEnvConfig();
+        }
         await initializeDatabases();
 
         // Initialize Databases second

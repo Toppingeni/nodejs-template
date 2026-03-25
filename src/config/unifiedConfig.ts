@@ -59,14 +59,23 @@ export const initVaultConfig = async () => {
     if (vaultUrl && vaultUser && vaultPwd) {
         try {
             // ขอ Token จาก Vault ผ่านประเภท Userpass ด้วย fetch
-            const loginRes = await fetch(
-                `${vaultUrl}/v1/auth/userpass/login/${vaultUser}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ password: vaultPwd }),
-                },
-            );
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10_000);
+            const loginRes = await (async () => {
+                try {
+                    return await fetch(
+                        `${vaultUrl}/v1/auth/userpass/login/${vaultUser}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ password: vaultPwd }),
+                            signal: controller.signal,
+                        },
+                    );
+                } finally {
+                    clearTimeout(timeoutId);
+                }
+            })();
 
             if (!loginRes.ok) {
                 throw new Error(`Vault Login Failed: ${loginRes.statusText}`);
@@ -148,5 +157,19 @@ export const initVaultConfig = async () => {
     Object.assign(config, _env.data);
     console.log(
         `[Config] Loaded environment variables successfully for environment: ${envPrefix}`,
+    );
+};
+
+export const initLocalEnvConfig = async () => {
+    const _env = envSchema.safeParse(process.env);
+
+    if (!_env.success) {
+        console.error("❌ Invalid environment variables:", _env.error.format());
+        throw new Error("Invalid environment variables");
+    }
+
+    Object.assign(config, _env.data);
+    console.log(
+        "[Config] Loaded environment variables successfully from process.env only",
     );
 };
