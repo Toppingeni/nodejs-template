@@ -2,6 +2,7 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import Vault from "node-vault-client";
+import { getErrorMessage } from "../utils/error";
 
 // อ่านชื่อโปรเจกต์จาก package.json สำหรับใช้เป็น Vault Path
 const pkgPath = path.resolve(__dirname, "../../package.json");
@@ -71,13 +72,20 @@ export const initVaultConfig = async () => {
             });
 
             // ดึงข้อมูล Global Config
-            const globalPath = `global/data/${envPrefix}/windows`;
+            const platform = process.platform;
+            const osFolder =
+                platform === "win32"
+                    ? "windows"
+                    : platform === "darwin"
+                      ? "mac"
+                      : "linux";
+            const globalPath = `global/data/${envPrefix}/${osFolder}`;
             try {
                 const globalRes = await vault.read(globalPath);
                 globalConfig = globalRes.data?.data || {};
-            } catch (e: any) {
+            } catch (e) {
                 console.warn(
-                    `[Vault] Could not read global config at ${globalPath}: ${e.message}`,
+                    `[Vault] Could not read global config at ${globalPath}: ${getErrorMessage(e)}`,
                 );
             }
 
@@ -86,14 +94,14 @@ export const initVaultConfig = async () => {
             try {
                 const projectRes = await vault.read(projectPath);
                 projectConfig = projectRes.data?.data || {};
-            } catch (e: any) {
+            } catch (e) {
                 console.warn(
-                    `[Vault] Could not read project config at ${projectPath}: ${e.message}`,
+                    `[Vault] Could not read project config at ${projectPath}: ${getErrorMessage(e)}`,
                 );
             }
-        } catch (error: any) {
+        } catch (error) {
             console.warn(
-                `[Vault Warning] Error connecting to vault: ${error.message}`,
+                `[Vault Warning] Error connecting to vault: ${getErrorMessage(error)}`,
             );
         }
     } else {
