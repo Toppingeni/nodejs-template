@@ -1,11 +1,13 @@
-import { initSequelize } from "../libs/sequelize";
+// import { initSequelize } from "../libs/sequelize";
 import { initOracleClient } from "oracledb";
 import { config } from "../config/unifiedConfig";
-import { oracle } from "../libs/oracle";
+import { getOracle } from "../libs/oracle";
 
 export const initializeDatabases = async () => {
     // 1. Initialize Oracle Thick Client if Path is provided
     console.log("ORACLE_CLIENT_PATH", config.ORACLE_CLIENT_PATH);
+    console.log("ORACLE_TNS_PATH", config.TNS_PATH);
+    console.log("ORACLE_DB_NAME", config.ORACLE_DB_NAME);
     if (config.ORACLE_CLIENT_PATH) {
         try {
             initOracleClient({ libDir: config.ORACLE_CLIENT_PATH });
@@ -13,19 +15,25 @@ export const initializeDatabases = async () => {
         } catch (err) {
             console.error("Failed to initialize Oracle Client:", err);
             throw new Error(
-                "Cannot load Oracle Client. Ensure ORACLE_CLIENT_PATH is set correctly."
+                "Cannot load Oracle Client. Ensure ORACLE_CLIENT_PATH is set correctly.",
             );
         }
     } else {
         console.warn(
-            "ORACLE_CLIENT_PATH is not set. Ensure the Oracle Client is installed and configured."
+            "ORACLE_CLIENT_PATH is not set. Ensure the Oracle Client is installed and configured.",
         );
     }
 
     // 2. Oracle DB testing connection (Optional but good for checking pool readiness if pool is configured)
     try {
+        if (!config.ORACLE_DB_NAME) {
+            console.warn(
+                "ORACLE_DB_NAME is not set. Skipping OracleDB connection test.",
+            );
+            return;
+        }
         // Just verify connection pool can be established by invoking a simple select query via our oracle db instance
-        await oracle.query("SELECT 1 FROM DUAL");
+        await getOracle().query("SELECT 1 FROM DUAL");
         console.log("OracleDB Connection Pool connected successfully");
     } catch (err) {
         console.error("Failed to connect to OracleDB:", err);

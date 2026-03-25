@@ -29,10 +29,22 @@ const envSchema = z.object({
 // กำหนด Object Config ทิ้งไว้ให้เป็นแบบ Mutable เพื่อนำไป import ใช้ได้เลยโดยไม่ต้อง await
 export const config = {} as z.infer<typeof envSchema>;
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
+
+const extractVaultConfig = (leaseData: unknown): Record<string, unknown> => {
+    if (!isRecord(leaseData)) return {};
+
+    const kvV2Data = leaseData.data;
+    if (isRecord(kvV2Data)) return kvV2Data;
+
+    return leaseData;
+};
+
 export const initVaultConfig = async () => {
     // 1. ระบุ Environment
     const nodeEnv = process.env.NODE_ENV || "development";
-    let envPrefix = "development";
+    let envPrefix = "dev";
 
     if (nodeEnv.startsWith("prod")) envPrefix = "prod";
     else if (nodeEnv.startsWith("stag")) envPrefix = "stag";
@@ -85,9 +97,8 @@ export const initVaultConfig = async () => {
                     ? globalPathOverride
                     : `global/data/${envPrefix}/${osFolder}`;
             try {
-                console.log(globalPath);
                 const globalRes = await vault.read(globalPath);
-                globalConfig = globalRes.data?.data || {};
+                globalConfig = extractVaultConfig(globalRes.getData());
             } catch (e) {
                 console.warn(
                     `[Vault] Could not read global config at ${globalPath}: ${getErrorMessage(e)}`,
@@ -102,7 +113,7 @@ export const initVaultConfig = async () => {
                     : `${envPrefix}/data/${projectName}`;
             try {
                 const projectRes = await vault.read(projectPath);
-                projectConfig = projectRes.data?.data || {};
+                projectConfig = extractVaultConfig(projectRes.getData());
             } catch (e) {
                 console.warn(
                     `[Vault] Could not read project config at ${projectPath}: ${getErrorMessage(e)}`,

@@ -42,7 +42,7 @@ app.use(
             "http://localhost:3101",
             "http://localhost:3000",
         ],
-    })
+    }),
 );
 
 // Routes
@@ -58,16 +58,19 @@ const startServer = async () => {
     try {
         // Initialize Vault/Config first
         await initVaultConfig();
+        await initializeDatabases();
 
         // Initialize Databases second
-        await initializeDatabases();
 
         const PORT = config.PORT;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
     } catch (error) {
-        console.error("Failed to start server due to initialization error:", error);
+        console.error(
+            "Failed to start server due to initialization error:",
+            error,
+        );
         process.exit(1);
     }
 };
@@ -83,4 +86,3 @@ process.on("SIGTERM", () => {
     console.log("Server shutting down...");
     process.exit(0);
 });
-

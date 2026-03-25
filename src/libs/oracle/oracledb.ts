@@ -15,7 +15,6 @@ const poolAlias = "defaultPool";
 
 async function oracleDB(mode: string) {
     const appConfig = await getConfig();
-
     if (!appConfig[mode]) throw new Error("Oracle connection string not found");
 
     // Initialize the connection pool if it doesn't already exist
@@ -40,7 +39,7 @@ async function oracleDB(mode: string) {
 
 export async function oracleConnection(
     mode: string,
-    callback: (connection: Connection) => Promise<any>
+    callback: (connection: Connection) => Promise<any>,
 ) {
     const connection = await oracleDB(mode);
 
