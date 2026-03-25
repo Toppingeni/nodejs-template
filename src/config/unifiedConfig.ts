@@ -41,6 +41,66 @@ const extractVaultConfig = (leaseData: unknown): Record<string, unknown> => {
     return leaseData;
 };
 
+const sleep = async (ms: number) =>
+    new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const isRetryableStatus = (status: number) =>
+    status === 408 || status === 429 || (status >= 500 && status <= 599);
+
+const fetchWithTimeoutAndRetry = async (
+    input: string,
+    init: RequestInit,
+    options?: {
+        timeoutMs?: number;
+        maxRetries?: number;
+        baseDelayMs?: number;
+    },
+) => {
+    const timeoutMs = options?.timeoutMs ?? 10_000;
+    const maxRetries = options?.maxRetries ?? 2;
+    const baseDelayMs = options?.baseDelayMs ?? 250;
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+            const res = await fetch(input, {
+                ...init,
+                signal: controller.signal,
+            });
+
+            if (
+                res.ok ||
+                !isRetryableStatus(res.status) ||
+                attempt === maxRetries
+            ) {
+                return res;
+            }
+
+            lastError = new Error(
+                `HTTP ${res.status} ${res.statusText || ""}`.trim(),
+            );
+        } catch (error) {
+            lastError = error;
+            if (attempt === maxRetries) throw error;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+
+        const backoffMs =
+            baseDelayMs * Math.pow(2, attempt) +
+            Math.floor(Math.random() * baseDelayMs);
+        await sleep(backoffMs);
+    }
+
+    throw lastError instanceof Error
+        ? lastError
+        : new Error(getErrorMessage(lastError));
+};
+
 export const initVaultConfig = async () => {
     // 1. ระบุ Environment
     const nodeEnv = process.env.NODE_ENV || "development";
@@ -58,24 +118,19 @@ export const initVaultConfig = async () => {
 
     if (vaultUrl && vaultUser && vaultPwd) {
         try {
-            // ขอ Token จาก Vault ผ่านประเภท Userpass ด้วย fetch
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10_000);
-            const loginRes = await (async () => {
-                try {
-                    return await fetch(
-                        `${vaultUrl}/v1/auth/userpass/login/${vaultUser}`,
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ password: vaultPwd }),
-                            signal: controller.signal,
-                        },
-                    );
-                } finally {
-                    clearTimeout(timeoutId);
-                }
-            })();
+            const loginRes = await fetchWithTimeoutAndRetry(
+                `${vaultUrl}/v1/auth/userpass/login/${vaultUser}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ password: vaultPwd }),
+                },
+                {
+                    timeoutMs: 10_000,
+                    maxRetries: nodeEnv.startsWith("prod") ? 3 : 1,
+                    baseDelayMs: 250,
+                },
+            );
 
             if (!loginRes.ok) {
                 throw new Error(`Vault Login Failed: ${loginRes.statusText}`);
