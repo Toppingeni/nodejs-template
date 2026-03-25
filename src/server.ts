@@ -13,15 +13,22 @@ dotenv.config({
     }`,
 });
 
-import { config } from "./config/unifiedConfig";
+import {
+    config,
+    initLocalEnvConfig,
+    initVaultConfig,
+} from "./config/unifiedConfig";
 import { initializeDatabases } from "./bootstrap/init";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
-import router from "./routes";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./tsoa/swagger.json";
+import { RegisterRoutes } from "./tsoa/routes";
+import { requestLogger } from "./middlewares/requestLogger";
+import { getErrorMessage } from "./utils/error";
 
 const app = express();
-const PORT = config.PORT;
 
 // Setup Rate Limiting
 const limiter = rateLimit({
@@ -35,6 +42,7 @@ const limiter = rateLimit({
 app.use(helmet()); // Add HTTP Security Headers
 app.use(limiter); // Apply Rate Limiting
 app.use(express.json());
+app.use(requestLogger);
 app.use(contextMiddleware);
 app.use(
     cors({
@@ -43,11 +51,12 @@ app.use(
             "http://localhost:3101",
             "http://localhost:3000",
         ],
-    })
+    }),
 );
 
-// Routes
-app.use("/", router);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+RegisterRoutes(app);
 
 // 404 Handler
 app.use(notFoundHandler);
@@ -57,14 +66,32 @@ app.use(errorHandler);
 
 const startServer = async () => {
     try {
-        // Initialize Databases first
+        // Initialize Vault/Config first
+        try {
+            await initVaultConfig();
+        } catch (error) {
+            console.warn(
+                `[Config Warning] initVaultConfig failed, falling back to local env: ${getErrorMessage(error)}`,
+            );
+            await initLocalEnvConfig();
+        }
         await initializeDatabases();
 
+        // Initialize Databases second
+
+        const PORT = config.PORT;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
+            console.log(
+                `Swagger UI available at http://localhost:${PORT}/docs`,
+            );
+            console.log(`API available at http://localhost:${PORT}/api`);
         });
     } catch (error) {
-        console.error("Failed to start server due to initialization error:", error);
+        console.error(
+            "Failed to start server due to initialization error:",
+            error,
+        );
         process.exit(1);
     }
 };
@@ -80,4 +107,3 @@ process.on("SIGTERM", () => {
     console.log("Server shutting down...");
     process.exit(0);
 });
-

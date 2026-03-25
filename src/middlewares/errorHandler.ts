@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ValidateError } from "tsoa";
 
 interface ErrorResponse {
     status: number;
@@ -7,20 +8,29 @@ interface ErrorResponse {
 }
 
 export function errorHandler(
-    err: Error,
+    err: unknown,
     req: Request,
     res: Response,
     next: NextFunction
 ) {
+    if (err instanceof ValidateError) {
+        res.status(400).json({
+            status: 400,
+            message: "Validation Failed",
+            details: err.fields,
+        });
+        return;
+    }
+
     const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
     const response: ErrorResponse = {
         status: statusCode,
-        message: err.message,
+        message: err instanceof Error ? err.message : String(err),
     };
 
     // Only show stack in development
     if (process.env.NODE_ENV === "development") {
-        response.stack = err.stack;
+        response.stack = err instanceof Error ? err.stack : undefined;
     }
 
     res.status(statusCode).json(response);

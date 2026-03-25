@@ -1,16 +1,29 @@
-import { Request, Response, NextFunction } from "express";
 import usersService from "../services/usersService";
-import { BaseController } from "./BaseController";
+import { Controller, Get, Route, Tags } from "tsoa";
 
-class UserController extends BaseController {
-    public getUsers = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const result = await usersService.getUsers();
-            this.handleSuccess(res, result, "Invoice diff endpoint");
-        } catch (error) {
-            this.handleError(error, "getUsers");
-        }
+export type UserDto = {
+    user_id: string;
+    user_name: string;
+};
+
+export type GetUsersResponse = {
+    message: string;
+    data: UserDto[];
+};
+
+@Route("users")
+@Tags("Users")
+export class UsersController extends Controller {
+    @Get("/")
+    public async getUsers(): Promise<GetUsersResponse> {
+        const users = await usersService.getUsers();
+        const data: UserDto[] = users.map((u) => ({
+            user_id: String(u.user_id),
+            user_name: String(u.user_name),
+        }));
+
+        return { message: "Success", data };
     }
 }
 
-export default new UserController();
+export default UsersController;

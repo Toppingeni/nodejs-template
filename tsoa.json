@@ -1,0 +1,14 @@
+{
+    "entryFile": "src/server.ts",
+    "noImplicitAdditionalProperties": "throw-on-extras",
+    "controllerPathGlobs": ["src/controllers/**/*controller.ts"],
+    "spec": {
+        "outputDirectory": "src/tsoa",
+        "specVersion": 3,
+        "basePath": "/api"
+    },
+    "routes": {
+        "routesDir": "src/tsoa",
+        "basePath": "/api"
+    }
+}
