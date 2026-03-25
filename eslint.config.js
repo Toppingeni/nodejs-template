@@ -13,6 +13,7 @@ module.exports = [
             "build/**",
             "dist/**",
             "node_modules/**",
+            "src/tsoa/**",
             "eslint.config.js",
             ".eslintrc.js",
         ],

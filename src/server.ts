@@ -17,8 +17,11 @@ import { config, initVaultConfig } from "./config/unifiedConfig";
 import { initializeDatabases } from "./bootstrap/init";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
-import router from "./routes";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./tsoa/swagger.json";
+import { RegisterRoutes } from "./tsoa/routes";
+import { requestLogger } from "./middlewares/requestLogger";
 
 const app = express();
 
@@ -34,6 +37,7 @@ const limiter = rateLimit({
 app.use(helmet()); // Add HTTP Security Headers
 app.use(limiter); // Apply Rate Limiting
 app.use(express.json());
+app.use(requestLogger);
 app.use(contextMiddleware);
 app.use(
     cors({
@@ -45,8 +49,9 @@ app.use(
     }),
 );
 
-// Routes
-app.use("/", router);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+RegisterRoutes(app);
 
 // 404 Handler
 app.use(notFoundHandler);
