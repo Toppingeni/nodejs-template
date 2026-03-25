@@ -16,10 +16,10 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(3000),
     TNS_PATH: z.string(),
     ORACLE_CLIENT_PATH: z.string(),
-    ORACLE_DB_NAME: z.string(),
-    ORACLE_USER: z.string(),
-    ORACLE_PWD: z.string(),
-    APP_ID: z.string(),
+    ORACLE_DB_NAME: z.string().optional(),
+    ORACLE_USER: z.string().optional(),
+    ORACLE_PWD: z.string().optional(),
+    APP_ID: z.string().optional(),
     JWT_SECRET: z.string().optional(),
     ENABLE_LOGGING: z.coerce.boolean().default(true),
     LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARN", "ERROR"]).default("DEBUG"),
@@ -79,8 +79,13 @@ export const initVaultConfig = async () => {
                     : platform === "darwin"
                       ? "mac"
                       : "linux";
-            const globalPath = `global/data/${envPrefix}/${osFolder}`;
+            const globalPathOverride = process.env.VAULT_GLOBAL_PATH?.trim();
+            const globalPath =
+                globalPathOverride && globalPathOverride.length > 0
+                    ? globalPathOverride
+                    : `global/data/${envPrefix}/${osFolder}`;
             try {
+                console.log(globalPath);
                 const globalRes = await vault.read(globalPath);
                 globalConfig = globalRes.data?.data || {};
             } catch (e) {
@@ -90,7 +95,11 @@ export const initVaultConfig = async () => {
             }
 
             // ดึงข้อมูล Project Config
-            const projectPath = `${envPrefix}/data/${projectName}`;
+            const projectPathOverride = process.env.VAULT_PROJECT_PATH?.trim();
+            const projectPath =
+                projectPathOverride && projectPathOverride.length > 0
+                    ? projectPathOverride
+                    : `${envPrefix}/data/${projectName}`;
             try {
                 const projectRes = await vault.read(projectPath);
                 projectConfig = projectRes.data?.data || {};
