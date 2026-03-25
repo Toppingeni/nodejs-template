@@ -70,6 +70,10 @@ const startServer = async () => {
         const PORT = config.PORT;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
+            console.log(
+                `Swagger UI available at http://localhost:${PORT}/docs`,
+            );
+            console.log(`API available at http://localhost:${PORT}/api`);
         });
     } catch (error) {
         console.error(
