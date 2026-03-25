@@ -13,7 +13,7 @@ dotenv.config({
     }`,
 });
 
-import { config } from "./config/unifiedConfig";
+import { config, initVaultConfig } from "./config/unifiedConfig";
 import { initializeDatabases } from "./bootstrap/init";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
@@ -21,7 +21,6 @@ import router from "./routes";
 import cors from "cors";
 
 const app = express();
-const PORT = config.PORT;
 
 // Setup Rate Limiting
 const limiter = rateLimit({
@@ -57,9 +56,13 @@ app.use(errorHandler);
 
 const startServer = async () => {
     try {
-        // Initialize Databases first
+        // Initialize Vault/Config first
+        await initVaultConfig();
+
+        // Initialize Databases second
         await initializeDatabases();
 
+        const PORT = config.PORT;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
