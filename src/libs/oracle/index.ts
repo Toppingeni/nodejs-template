@@ -1,4 +1,6 @@
 import oracledb from "oracledb";
+import fs from "fs";
+import path from "path";
 import { oracleConnection } from "./oracledb";
 import { CommandsSpType } from "../../types/oracleType";
 import { convertSQL } from "../../utils/sqlHelper";
@@ -391,23 +393,62 @@ class Oracle {
      * @returns SQL statement string
      */
     async getSqlStmt(sqlNo: number, _appId?: number): Promise<string> {
-        const appId = _appId ?? this.appID;
-        const sqlTab = `SELECT  SQL_STMT FROM KPDBA.SQL_TAB_OPPN sto WHERE app_id = ${appId} AND sql_no = ${sqlNo}`;
+        const nodeEnv = String(
+            config.NODE_ENV || process.env.NODE_ENV || "development",
+        );
+        const isDev = nodeEnv.startsWith("dev");
+
+        const appIdRaw = _appId ?? this.appID;
+        const appId =
+            typeof appIdRaw === "number" ? appIdRaw : Number(appIdRaw);
+        if (!Number.isFinite(appId)) {
+            throw new Error(`Invalid APP_ID: ${String(appIdRaw)}`);
+        }
+
+        if (isDev) {
+            const sqltabsDir =
+                process.env.SQLTAB_DIR ||
+                path.resolve(process.cwd(), "src", "sqltabs");
+            const sqlFileName = `${appId}_${sqlNo}.sql`;
+            const sqlFilePath = path.join(sqltabsDir, sqlFileName);
+
+            if (fs.existsSync(sqlFilePath)) {
+                const raw = fs.readFileSync(sqlFilePath, "utf-8");
+                let sql = raw.trim();
+                while (sql.endsWith(";")) {
+                    sql = sql.slice(0, -1).trimEnd();
+                }
+                if (sql.length > 0) return sql;
+            }
+        }
+
+        const sqlTab = `
+            SELECT SQL_STMT
+            FROM KPDBA.SQL_TAB_OPPN sto
+            WHERE app_id = :appId
+              AND sql_no = :sqlNo
+        `;
+        const sqlTabParams = { appId, sqlNo };
         try {
             const startTime = Date.now();
-            const result = await this.query<{ SQL_STMT: string }>(sqlTab, [], {
-                fetchInfo: {
-                    SQL_STMT: { type: oracledb.STRING as unknown as number },
+            const result = await this.query<{ SQL_STMT: string }>(
+                sqlTab,
+                sqlTabParams,
+                {
+                    fetchInfo: {
+                        SQL_STMT: {
+                            type: oracledb.STRING as unknown as number,
+                        },
+                    },
                 },
-            });
+            );
 
             const duration = Date.now() - startTime;
-            logger.logSQL(sqlTab, [], duration);
+            logger.logSQL(sqlTab, sqlTabParams, duration);
 
             return result[0].SQL_STMT;
         } catch (error: unknown) {
-            const appId = _appId ?? this.appID;
-            logger.logSQLError(sqlTab, [], error);
+            logger.logSQLError(sqlTab, sqlTabParams, error);
             const message =
                 error instanceof Error ? error.message : String(error);
             throw new Error(message);
