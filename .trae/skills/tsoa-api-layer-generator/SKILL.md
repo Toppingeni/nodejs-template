@@ -27,6 +27,11 @@ Skill นี้กำหนดมาตรฐานการสร้าง API 
 
 ## Step-by-step (สร้าง API ใหม่ 1 endpoint)
 
+### Step 0) Confirm APP_ID + Controller Glob
+
+- Dev SQLTab จะถูกอ่านจากไฟล์ชื่อ `<APP_ID>_<SQL_NO>.sql` โดย `APP_ID` มาจาก env (`config.APP_ID`)
+- ต้องแน่ใจว่า `tsoa.json` มี `controllerPathGlobs` ที่ match กับชื่อไฟล์ controller ที่ใช้จริง (เช่น `*controller.ts` หรือ `*Controller.ts`)
+
 ### Step 1) เตรียม schema cache
 
 - ถ้ายังไม่มี: สร้าง `src/schema/<table>.md` แบบย่อ
