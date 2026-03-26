@@ -30,6 +30,8 @@ Skill นี้กำหนดมาตรฐานการสร้าง API 
 ### Step 0) Confirm APP_ID + Controller Glob
 
 - Dev SQLTab จะถูกอ่านจากไฟล์ชื่อ `<APP_ID>_<SQL_NO>.sql` โดย `APP_ID` มาจาก env (`config.APP_ID`)
+- ถ้าไม่เจอ/ไม่มั่นใจว่า `APP_ID` คืออะไร ให้ถามผู้ใช้ทันที (ห้ามเดา)
+- ถ้าไม่รู้ว่าจะเริ่ม `SQL_NO` จากเลขไหน ให้ถามผู้ใช้ทันที (ห้ามสุ่มเลข)
 - ต้องแน่ใจว่า `tsoa.json` มี `controllerPathGlobs` ที่ match กับชื่อไฟล์ controller ที่ใช้จริง (เช่น `*controller.ts` หรือ `*Controller.ts`)
 
 ### Step 1) เตรียม schema cache
@@ -41,6 +43,7 @@ Skill นี้กำหนดมาตรฐานการสร้าง API 
 
 - สร้างไฟล์ `src/sqltabs/<APP_ID>_<SQL_NO>.sql` (1 statement ต่อไฟล์)
 - ชื่อไฟล์ตัวอย่าง: `99_1.sql`
+- ก่อนกำหนด `<SQL_NO>` ให้ตรวจไฟล์ที่มีอยู่ใน `src/sqltabs/` ของ `<APP_ID>` เดียวกันเพื่อหลีกเลี่ยงชนกับของเดิม (ถ้าไม่สามารถตรวจได้ ให้ถามผู้ใช้)
 
 ตัวอย่าง (Query):
 

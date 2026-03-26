@@ -143,7 +143,23 @@ export const getUsersDynamic = async (status?: string) => {
 ## 💡 สิ่งที่ AI ต้องทำเสมอเมื่อถูกสั่งให้สร้าง Query
 
 1. ตรวจ `src/schema/<table>.md` ก่อนเสมอ ถ้าไม่มีให้ใช้ Oracle MCP ดึง schema แล้วสรุปเก็บไว้ (ดู Skill `oracle-schema-cache`)
-2. ถามผู้ใช้เกี่ยวกับ `APP_ID` และ `SQL_NO` ที่จะใช้ หากผู้ใช้ยังไม่ได้ให้มา
+2. ระบุ `APP_ID` และ `SQL_NO` ให้ชัดเจนก่อนสร้างไฟล์ sqltab (ห้ามเดา)
+    - หา `APP_ID` ตามลำดับนี้:
+        - ดูจาก config (`config.APP_ID`) และไฟล์ env ของโปรเจกต์ (เช่น `.env`, `.env.<NODE_ENV>`, `.env.sample`)
+        - ถ้ายังไม่เจอ/ไม่มั่นใจ ให้ถามผู้ใช้ทันทีว่า `APP_ID` คืออะไร
+    - หา `SQL_NO` ตามลำดับนี้:
+        - ถ้ามีไฟล์ใน `src/sqltabs/` ของ `APP_ID` เดียวกัน ให้เลือกเลขถัดไปที่ “ยังไม่ถูกใช้” (เช่นดูจากชื่อไฟล์ `<APP_ID>_<SQL_NO>.sql`)
+        - ถ้าเชื่อม DB ได้ ให้ใช้ Oracle MCP query หา `MAX(SQL_NO)` ของ `KPDBA.SQL_TAB_OPPN` ตาม `APP_ID` แล้วเลือกเลขถัดไป (max + 1)
+            - ตัวอย่าง SQL:
+                ```sql
+                SELECT NVL(MAX(sql_no), 0) AS MAX_SQL_NO
+                FROM KPDBA.SQL_TAB_OPPN
+                WHERE app_id = :appId
+                ```
+        - ถ้ายังไม่เจอ/ไม่มั่นใจ ให้ถามผู้ใช้ทันทีว่า “ให้เริ่ม SQL_NO จากเลขไหน/ช่วงไหน”
+    - ชุดคำถามที่ต้องถามเมื่อข้อมูลไม่พอ:
+        - `APP_ID ของระบบนี้คืออะไร?`
+        - `SQL_NO ให้เริ่มจากเลขไหน? (หรือมีช่วงที่ทีมจองไว้ไหม เช่น 1000-1999)`
 3. สร้างไฟล์ SQL สำหรับ Dev ที่ `src/sqltabs/<APP_ID>_<SQL_NO>.sql` โดยใส่ “SQL statement” (ไม่ต้องมี INSERT/COMMIT)
 4. ถ้าผู้ใช้ต้องการนำไปอัปเดต DB (Prod/Staging) ให้สร้างไฟล์ “สคริปต์ INSERT” เพิ่มอีกไฟล์ (เช่น `src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`) ที่มี `INSERT INTO KPDBA.SQL_TAB_OPPN ...; COMMIT;`
 5. เขียนโค้ดใน Repository/Service ฝั่ง Node.js โดยเรียกใช้งาน `oracle.queryFromSqlTab`, `oracle.commandFromSqlTab` หรือ `oracle.getSqlStmt` อย่างถูกต้อง
