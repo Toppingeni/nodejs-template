@@ -42,7 +42,7 @@ CREATE TABLE KPDBA.SQL_TAB_OPPN
 
 ### 1.1 Development: เก็บ SQL Statement เป็นไฟล์ (เร็ว ไม่ต้องรออัปเดต DB)
 
-ชื่อไฟล์: `<APP_ID>_<SQL_NO>.sql` เช่น `99_101.sql`
+ชื่อไฟล์: `<APP_ID>_<SQL_NO>.sql` เช่น `99_1.sql`
 
 เนื้อหาไฟล์เป็น SQL statement เพียงอย่างเดียว (รองรับ bind `:param`) แนะนำให้ใส่ 1 statement ต่อ 1 ไฟล์
 
@@ -64,7 +64,7 @@ WHERE STATUS = :status
 INSERT INTO KPDBA.SQL_TAB_OPPN (APP_ID, SQL_NO, SQL_TYPE, SQL_DESC, SQL_STMT, DB_CONNECTION, REVISION)
 VALUES (
   99, -- สมมติ APP_ID คือ 99
-  101, -- ลำดับ SQL_NO
+  1, -- ลำดับ SQL_NO
   1, -- 1 = SELECT
   'Get active users by role',
   'SELECT * FROM USERS WHERE STATUS = ''ACTIVE'' AND ROLE_ID = :roleId',
@@ -87,15 +87,15 @@ import { oracle } from "../../libs/oracle";
 
 // กรณีดึงข้อมูล (SELECT)
 export const getUsersByRole = async (roleId: number) => {
-    // 101 คือ SQL_NO จากในฐานข้อมูล
-    const result = await oracle.queryFromSqlTab<any>(101, { roleId });
+    // 1 คือ SQL_NO
+    const result = await oracle.queryFromSqlTab<any>(1, { roleId });
     return result;
 };
 
 // กรณีแก้ไข/เพิ่มข้อมูล (UPDATE/INSERT/DELETE)
 export const deleteUser = async (userId: number) => {
-    // 102 คือ SQL_NO สำหรับคำสั่ง DELETE
-    const result = await oracle.commandFromSqlTab(102, { userId });
+    // 2 คือ SQL_NO สำหรับคำสั่ง DELETE
+    const result = await oracle.commandFromSqlTab(2, { userId });
     return result.rowsAffected;
 };
 ```
@@ -118,7 +118,7 @@ import { oracle } from "../../libs/oracle";
 
 export const getUsersDynamic = async (status?: string) => {
     // 1. ดึง SQL Template ออกมาจาก SQL_TAB_OPPN
-    let sql = await oracle.getSqlStmt(103);
+    let sql = await oracle.getSqlStmt(3);
 
     const params: any = {};
     let whereClause = "";
@@ -142,9 +142,10 @@ export const getUsersDynamic = async (status?: string) => {
 
 ## 💡 สิ่งที่ AI ต้องทำเสมอเมื่อถูกสั่งให้สร้าง Query
 
-1. ถามผู้ใช้เกี่ยวกับ `APP_ID` และ `SQL_NO` ที่จะใช้ หากผู้ใช้ยังไม่ได้ให้มา
-2. สร้างไฟล์ SQL สำหรับ Dev ที่ `src/sqltabs/<APP_ID>_<SQL_NO>.sql` โดยใส่ “SQL statement” (ไม่ต้องมี INSERT/COMMIT)
-3. ถ้าผู้ใช้ต้องการนำไปอัปเดต DB (Prod/Staging) ให้สร้างไฟล์ “สคริปต์ INSERT” เพิ่มอีกไฟล์ (เช่น `src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`) ที่มี `INSERT INTO KPDBA.SQL_TAB_OPPN ...; COMMIT;`
-4. เขียนโค้ดใน Repository/Service ฝั่ง Node.js โดยเรียกใช้งาน `oracle.queryFromSqlTab`, `oracle.commandFromSqlTab` หรือ `oracle.getSqlStmt` อย่างถูกต้อง
-5. ห้ามต่อ String SQL ตรงๆ ในโค้ด ให้ Replace เฉพาะโครงสร้าง (เช่น `/*where*/`) แต่ Data ต้องส่งผ่าน Bind Parameters เสมอ
-6. ถ้าเป็น Query แบบ Dynamic ให้ใส่ placeholder ใน SQL เช่น `/*where*/`, `/*orderBy*/` แล้วให้โค้ด TypeScript เป็นคน replace
+1. ตรวจ `src/schema/<table>.md` ก่อนเสมอ ถ้าไม่มีให้ใช้ Oracle MCP ดึง schema แล้วสรุปเก็บไว้ (ดู Skill `oracle-schema-cache`)
+2. ถามผู้ใช้เกี่ยวกับ `APP_ID` และ `SQL_NO` ที่จะใช้ หากผู้ใช้ยังไม่ได้ให้มา
+3. สร้างไฟล์ SQL สำหรับ Dev ที่ `src/sqltabs/<APP_ID>_<SQL_NO>.sql` โดยใส่ “SQL statement” (ไม่ต้องมี INSERT/COMMIT)
+4. ถ้าผู้ใช้ต้องการนำไปอัปเดต DB (Prod/Staging) ให้สร้างไฟล์ “สคริปต์ INSERT” เพิ่มอีกไฟล์ (เช่น `src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`) ที่มี `INSERT INTO KPDBA.SQL_TAB_OPPN ...; COMMIT;`
+5. เขียนโค้ดใน Repository/Service ฝั่ง Node.js โดยเรียกใช้งาน `oracle.queryFromSqlTab`, `oracle.commandFromSqlTab` หรือ `oracle.getSqlStmt` อย่างถูกต้อง
+6. ห้ามต่อ String SQL ตรงๆ ในโค้ด ให้ Replace เฉพาะโครงสร้าง (เช่น `/*where*/`) แต่ Data ต้องส่งผ่าน Bind Parameters เสมอ
+7. ถ้าเป็น Query แบบ Dynamic ให้ใส่ placeholder ใน SQL เช่น `/*where*/`, `/*orderBy*/` แล้วให้โค้ด TypeScript เป็นคน replace
