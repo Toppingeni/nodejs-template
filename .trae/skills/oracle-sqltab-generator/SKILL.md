@@ -156,10 +156,11 @@ export const getUsersDynamic = async (status?: string) => {
                 FROM KPDBA.SQL_TAB_OPPN
                 WHERE app_id = :appId
                 ```
-        - ถ้ายังไม่เจอ/ไม่มั่นใจ ให้ถามผู้ใช้ทันทีว่า “ให้เริ่ม SQL_NO จากเลขไหน/ช่วงไหน”
+        - โปรเจกต์นี้กำหนดให้ `SQL_NO` เริ่มที่ `1` และเพิ่มทีละ `1` (ต่อ `APP_ID`)
+        - ถ้ายังไม่มั่นใจ ให้ถามผู้ใช้ทันทีว่า “SQL_NO ของงานนี้ให้ใช้เลขไหน” (ห้ามเดา)
     - ชุดคำถามที่ต้องถามเมื่อข้อมูลไม่พอ:
         - `APP_ID ของระบบนี้คืออะไร?`
-        - `SQL_NO ให้เริ่มจากเลขไหน? (หรือมีช่วงที่ทีมจองไว้ไหม เช่น 1000-1999)`
+        - `SQL_NO ของงานนี้ให้ใช้เลขไหน?`
 3. สร้างไฟล์ SQL สำหรับ Dev ที่ `src/sqltabs/<APP_ID>_<SQL_NO>.sql` โดยใส่ “SQL statement” (ไม่ต้องมี INSERT/COMMIT)
 4. ถ้าผู้ใช้ต้องการนำไปอัปเดต DB (Prod/Staging) ให้สร้างไฟล์ “สคริปต์ INSERT” เพิ่มอีกไฟล์ (เช่น `src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`) ที่มี `INSERT INTO KPDBA.SQL_TAB_OPPN ...; COMMIT;`
 5. เขียนโค้ดใน Repository/Service ฝั่ง Node.js โดยเรียกใช้งาน `oracle.queryFromSqlTab`, `oracle.commandFromSqlTab` หรือ `oracle.getSqlStmt` อย่างถูกต้อง
