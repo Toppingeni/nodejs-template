@@ -25,7 +25,9 @@
       "Bash(node -e \"console.log\\(require\\('/Users/admin/node_modules/oracledb/package.json'\\).version\\)\")",
       "Bash(node -e ':*)",
       "Bash(npx nodemon:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(cat /Users/admin/Documents/Code/Ingeni/OPPN/nodejs-template/.env*)",
+      "Bash(npx vite:*)"
     ],
     "additionalDirectories": [
       "/Users/admin/node_modules/oracledb"
