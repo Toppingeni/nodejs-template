@@ -1,11 +1,13 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "skipLibCheck": true
-  },
-  "include": [],
-  "references": [{ "path": "./client" }, { "path": "./server" }]
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "include": ["server/**/*.ts", "shared/**/*.ts"],
+    "references": [{ "path": "./client" }, { "path": "./server" }]
 }
