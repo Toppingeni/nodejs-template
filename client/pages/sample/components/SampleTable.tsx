@@ -3,7 +3,6 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getPaginationRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
@@ -14,10 +13,10 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/badge";
+import { TablePagination, EmptyState } from "@/components/shared/table";
 import { formatDateTime } from "../../../../shared/utils/index";
 import type { Sample } from "../../../../shared/types/sample";
 
@@ -25,25 +24,10 @@ interface SampleTableProps {
   data: Sample[];
   isLoading: boolean;
   onEdit: (sample: Sample) => void;
-  onDelete: (sample: Sample) => void;
+  onDelete: (id: string) => void;
 }
 
 const columnHelper = createColumnHelper<Sample>();
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === "A") {
-    return (
-      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-        ใช้งาน
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
-      ลบแล้ว
-    </span>
-  );
-}
 
 function SkeletonRow() {
   return (
@@ -64,6 +48,10 @@ export function SampleTable({
   onDelete,
 }: SampleTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const columns = [
     columnHelper.accessor("name", {
@@ -115,7 +103,7 @@ export function SampleTable({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDelete(info.row.original)}
+            onClick={() => onDelete(info.row.original.id)}
             className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
             aria-label={`ลบ ${info.row.original.name}`}
           >
@@ -129,17 +117,15 @@ export function SampleTable({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
   });
 
   return (
     <div className="overflow-hidden rounded-2xl bg-white/70 shadow-sm backdrop-blur-xl">
-      {/* Table */}
       <div className="overflow-x-auto">
         <table
           className="w-full text-sm"
@@ -203,30 +189,9 @@ export function SampleTable({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-12 text-center text-slate-500"
+                  className="px-4 py-12"
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="rounded-full bg-slate-100 p-4">
-                      <svg
-                        className="h-8 w-8 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                        />
-                      </svg>
-                    </div>
-                    <p className="font-medium">ไม่พบข้อมูล</p>
-                    <p className="text-sm text-slate-400">
-                      ลองเปลี่ยนเงื่อนไขการค้นหาหรือสร้างข้อมูลใหม่
-                    </p>
-                  </div>
+                  <EmptyState />
                 </td>
               </tr>
             ) : (
@@ -250,55 +215,14 @@ export function SampleTable({
         </table>
       </div>
 
-      {/* Pagination */}
-      {!isLoading && table.getPageCount() > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-          <p className="text-sm text-slate-500">
-            แสดง{" "}
-            <span className="font-medium text-slate-700">
-              {table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-                1}
-            </span>{" "}
-            –{" "}
-            <span className="font-medium text-slate-700">
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                data.length,
-              )}
-            </span>{" "}
-            จาก{" "}
-            <span className="font-medium text-slate-700">{data.length}</span>{" "}
-            รายการ
-          </p>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="หน้าก่อนหน้า"
-              className="h-8 w-8 p-0"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="px-2 text-sm text-slate-600">
-              หน้า {table.getState().pagination.pageIndex + 1} /{" "}
-              {table.getPageCount()}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="หน้าถัดไป"
-              className="h-8 w-8 p-0"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      {!isLoading && (
+        <TablePagination
+          currentPage={pagination.pageIndex}
+          totalPages={table.getPageCount()}
+          totalItems={data.length}
+          pageSize={pagination.pageSize}
+          onPageChange={(page) => setPagination({ ...pagination, pageIndex: page })}
+        />
       )}
     </div>
   );

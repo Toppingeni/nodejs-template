@@ -1,5 +1,4 @@
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/shared/search";
 import type { SampleFilters as SampleFiltersType } from "../../../../shared/types/sample";
 import type { RecordStatus } from "../../../../shared/types/database";
 
@@ -9,8 +8,8 @@ interface SampleFiltersProps {
 }
 
 export function SampleFilters({ filters, onChange }: SampleFiltersProps) {
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...filters, search: e.target.value });
+  const handleSearchChange = (value: string) => {
+    onChange({ ...filters, search: value || undefined });
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -23,20 +22,13 @@ export function SampleFilters({ filters, onChange }: SampleFiltersProps) {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      {/* Search */}
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <Input
-          type="text"
-          placeholder="ค้นหาชื่อ, คำอธิบาย..."
-          value={filters.search ?? ""}
-          onChange={handleSearchChange}
-          className="pl-9 bg-white/80 border-slate-200 focus:bg-white"
-          aria-label="ค้นหาข้อมูล"
-        />
-      </div>
+      <SearchInput
+        value={filters.search ?? ""}
+        onChange={handleSearchChange}
+        placeholder="ค้นหาชื่อ, คำอธิบาย..."
+        className="flex-1"
+      />
 
-      {/* Status filter */}
       <div className="sm:w-44">
         <select
           value={filters.status ?? ""}
