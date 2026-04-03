@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, LogIn, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
@@ -9,8 +9,8 @@ import { useAuth } from "./context";
 const loginSchema = z.object({
     userId: z.string().min(1, "กรุณากรอกรหัสผู้ใช้"),
     password: z.string().min(1, "กรุณากรอกรหัสผ่าน"),
-    remember: z.boolean().default(false),
-    trackingStatus: z.boolean().default(false),
+    remember: z.boolean().default(true),
+    enableTracking: z.boolean().default(false),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -21,6 +21,7 @@ export default function LoginPage() {
     const [searchParams] = useSearchParams();
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [shouldRedirect, setShouldRedirect] = useState(false);
 
     const redirectTo = searchParams.get("redirectTo") ?? "/";
 
@@ -30,21 +31,29 @@ export default function LoginPage() {
         formState: { errors, isSubmitting },
     } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
-        defaultValues: { userId: "", password: "", remember: false, trackingStatus: false },
+        defaultValues: { userId: "", password: "", remember: true, enableTracking: false },
     });
+
+    useEffect(() => {
+        if (shouldRedirect) {
+            navigate(redirectTo, { replace: true });
+        }
+    }, [shouldRedirect, navigate, redirectTo]);
 
     const onSubmit = async (values: LoginFormValues) => {
         setError(null);
+
         try {
-            await loginWithCredentials(
-                values.userId,
-                values.password,
-                values.remember,
-                values.trackingStatus,
-            );
-            navigate(redirectTo, { replace: true });
-        } catch {
-            setError("รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
+            await loginWithCredentials({
+                userId: values.userId,
+                password: values.password,
+                trackingstatus: values.enableTracking ? "T" : "F",
+                remember: values.remember,
+            });
+            setShouldRedirect(true);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ";
+            setError(message);
         }
     };
 
@@ -167,19 +176,17 @@ export default function LoginPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <label
-                                    htmlFor="trackingStatus"
+                                    htmlFor="enableTracking"
                                     className="cursor-pointer select-none text-sm text-slate-600"
                                 >
                                     อนุญาตให้ติดตาม
                                 </label>
                                 <input
-                                    id="trackingStatus"
+                                    id="enableTracking"
                                     type="checkbox"
-                                    role="switch"
-                                    {...register("trackingStatus")}
+                                    {...register("enableTracking")}
                                     className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     disabled={isSubmitting}
-                                    aria-label="อนุญาตให้ติดตาม"
                                 />
                             </div>
                         </div>
