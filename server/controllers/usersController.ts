@@ -1,5 +1,5 @@
 import usersService from "../services/usersService";
-import { Controller, Get, Route, Tags } from "tsoa";
+import { Controller, Get, Route, Tags } from "@tsoa/runtime";
 
 export type UserDto = {
     user_id: string;

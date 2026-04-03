@@ -1,4 +1,4 @@
-import { Get, Post, Put, Delete, Route, Tags, Query, Path, Body } from "tsoa";
+import { Get, Post, Put, Delete, Route, Tags, Query, Path, Body } from "@tsoa/runtime";
 import { BaseController } from "./BaseController";
 import { sampleService } from "../services/sampleService";
 import { Sample } from "../../shared/types/sample";
@@ -67,9 +67,7 @@ export class SampleController extends BaseController {
 
     /** สร้างข้อมูลใหม่ */
     @Post("/")
-    public async create(
-        @Body() body: CreateSampleBody,
-    ): Promise<SampleCreateResponse> {
+    public async create(@Body() body: CreateSampleBody): Promise<SampleCreateResponse> {
         try {
             const data = await sampleService.create(body);
             return this.handleSuccess(data, "สร้างข้อมูลสำเร็จ", 201);
@@ -94,9 +92,7 @@ export class SampleController extends BaseController {
 
     /** ลบข้อมูล (soft delete) */
     @Delete("{id}")
-    public async remove(
-        @Path() id: string,
-    ): Promise<{ message: string; data: null }> {
+    public async remove(@Path() id: string): Promise<{ message: string; data: null }> {
         try {
             await sampleService.remove(id);
             return this.handleSuccess(null, "ลบข้อมูลสำเร็จ");

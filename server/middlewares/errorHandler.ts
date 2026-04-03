@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ValidateError } from "tsoa";
+import { ValidateError } from "@tsoa/runtime";
 
 interface ErrorResponse {
     status: number;
@@ -7,12 +7,7 @@ interface ErrorResponse {
     stack?: string;
 }
 
-export function errorHandler(
-    err: unknown,
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
+export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
     if (err instanceof ValidateError) {
         res.status(400).json({
             status: 400,
@@ -36,11 +31,7 @@ export function errorHandler(
     res.status(statusCode).json(response);
 }
 
-export function notFoundHandler(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
+export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
     res.status(404);
     const error = new Error(`Not Found - ${req.originalUrl}`);
     next(error);
