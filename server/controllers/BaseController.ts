@@ -1,20 +1,21 @@
-import { Response } from "express";
+import { Controller } from "tsoa";
 import { logger } from "../utils/logger";
 
-export abstract class BaseController {
+export abstract class BaseController extends Controller {
     /**
-     * สำหรับเตรียมรูปแบบข้อมูลเป้าหมายที่เป็นการ Response กลับไปอย่างถูกต้องและมั่นใจได้ 
+     * สำหรับเตรียมรูปแบบข้อมูลเป้าหมายที่เป็นการ Response กลับไปอย่างถูกต้องและมั่นใจได้
      */
-    protected handleSuccess<T>(res: Response, data: T, message: string = "Success", statusCode: number = 200): void {
-        res.status(statusCode).json({
-            message,
-            data,
-        });
+    protected handleSuccess<T>(
+        data: T,
+        message: string = "Success",
+        statusCode: number = 200,
+    ) {
+        this.setStatus(statusCode);
+        return { message, data };
     }
 
     /**
-     * ดักจับ Error และส่งต่อไปที่ Global Error Handler (ไม่ใช้การ response โดยตรงเพื่อป้องกัน Code Duplication)
-     * แต่จะโยนเป็น Error ออกไปเพื่อเข้าสู่ Pipeline
+     * ดักจับ Error และส่งต่อไปที่ Global Error Handler
      */
     protected handleError(error: unknown, methodName: string): never {
         logger.error(`Error in ${methodName}:`, error);

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
-      "Bash(grep -E '\\\\.\\(ts|js|html|json\\)$')"
+      "Bash(grep -E '\\\\.\\(ts|js|html|json\\)$')",
+      "Bash(python3 -c \" import sys, json for line in sys.stdin: data = json.loads\\(line.strip\\(\\)\\) if data.get\\('type'\\) == 'assistant': for c in data.get\\('message',{}\\).get\\('content',[]\\): if c.get\\('type'\\) == 'text': print\\(c['text'][:8000]\\) \")",
+      "Bash(python3:*)"
     ]
   }
 }

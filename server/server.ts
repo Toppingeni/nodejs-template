@@ -1,16 +1,23 @@
 // Set application timezone to match server location
 process.env.TZ = "Asia/Bangkok";
 
+import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Load environment variables first
 dotenv.config({
-  path: `${__dirname}/../.env${
-    process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
-  }`,
+    path: path.resolve(
+        __dirname,
+        `../.env${process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""}`,
+    ),
 });
 
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
@@ -23,10 +30,10 @@ import { requestLogger } from "./middlewares/requestLogger";
 
 // Setup Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 /**
@@ -34,31 +41,31 @@ const limiter = rateLimit({
  * ไม่รวม error handlers (ให้ entry point เพิ่มเอง หลัง static/SPA fallback)
  */
 export function createServer() {
-  const app = express();
+    const app = express();
 
-  // Security & parsing
-  app.use(helmet());
-  app.use(limiter);
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+    // Security & parsing
+    app.use(helmet());
+    app.use(limiter);
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
 
-  // Request context & logging
-  app.use(requestLogger);
-  app.use(contextMiddleware);
+    // Request context & logging
+    app.use(requestLogger);
+    app.use(contextMiddleware);
 
-  // CORS
-  const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
-    : ["http://localhost:3000", "http://localhost:8080"];
-  app.use(cors({ origin: corsOrigins }));
+    // CORS
+    const corsOrigins = process.env.CORS_ORIGINS
+        ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
+        : ["http://localhost:3000", "http://localhost:8080"];
+    app.use(cors({ origin: corsOrigins }));
 
-  // Swagger
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    // Swagger
+    app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-  // TSOA auto-generated routes
-  RegisterRoutes(app);
+    // TSOA auto-generated routes
+    RegisterRoutes(app);
 
-  return app;
+    return app;
 }
 
 export { errorHandler, notFoundHandler };

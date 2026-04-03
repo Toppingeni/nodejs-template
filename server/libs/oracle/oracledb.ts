@@ -2,13 +2,6 @@ import type { Connection } from "oracledb";
 import * as oracledb from "oracledb";
 import { getConfig } from "./config";
 import { config } from "../../config/unifiedConfig";
-import dotenv from "dotenv";
-// Load environment variables first
-dotenv.config({
-    path: `${__dirname}/../.env${
-        process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
-    }`,
-});
 export type IOracleDB = ReturnType<typeof oracleDB>;
 
 const poolAlias = "defaultPool";

@@ -1,8 +1,13 @@
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import Vault from "node-vault-client";
 import { getErrorMessage } from "../utils/error";
+
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // อ่านชื่อโปรเจกต์จาก package.json สำหรับใช้เป็น Vault Path
 const pkgPath = path.resolve(__dirname, "../../package.json");

@@ -1,16 +1,15 @@
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import tns from "tns";
 
 import type { ITns } from "../../types/oracleType";
 import { getTnsString } from "../../utils/databaseHelper";
 import { config } from "../../config/unifiedConfig";
-import dotenv from "dotenv";
-// Load environment variables first
-dotenv.config({
-    path: `${__dirname}/../.env${
-        process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""
-    }`,
-});
-const tns = require("tns").default;
+
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const getConfig = async () => {
     const tnsPath =
@@ -18,7 +17,7 @@ export const getConfig = async () => {
     const content = fs.readFileSync(tnsPath, "utf-8");
     const allTns: ITns = tns(content);
     const tnsConnectString: Record<string, string> = {};
-    for await (const key of Object.keys(allTns)) {
+    for (const key of Object.keys(allTns)) {
         const con_tns = allTns[key];
 
         if (con_tns.DESCRIPTION.ADDRESS_LIST) {
