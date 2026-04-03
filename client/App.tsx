@@ -9,6 +9,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AuthProvider } from "@/auth";
 import { ThemeProvider } from "@/theme";
 import { LayoutProvider } from "@/contexts/LayoutContext";
+import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { queryClient } from "@/tanstackQuery";
 import { generateRoutes } from "./router/routes";
 import "./global.css";
@@ -16,24 +17,26 @@ import "./global.css";
 const router = createBrowserRouter(generateRoutes());
 
 function App() {
-  return (
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeProvider>
-            <LayoutProvider>
-              <TooltipProvider>
-                <RouterProvider router={router} />
-              </TooltipProvider>
-            </LayoutProvider>
-          </ThemeProvider>
-          <Toaster />
-          <Sonner />
-          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-        </AuthProvider>
-      </QueryClientProvider>
-    </StrictMode>
-  );
+    return (
+        <StrictMode>
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <UserRoleProvider>
+                        <ThemeProvider>
+                            <LayoutProvider>
+                                <TooltipProvider>
+                                    <RouterProvider router={router} />
+                                </TooltipProvider>
+                            </LayoutProvider>
+                        </ThemeProvider>
+                    </UserRoleProvider>
+                    <Toaster />
+                    <Sonner />
+                    {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+                </AuthProvider>
+            </QueryClientProvider>
+        </StrictMode>
+    );
 }
 
 const root = createRoot(document.getElementById("root")!);

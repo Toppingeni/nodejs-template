@@ -28,7 +28,9 @@
       "Bash(npm uninstall:*)",
       "Bash(cat /Users/admin/Documents/Code/Ingeni/OPPN/nodejs-template/.env*)",
       "Bash(npx vite:*)",
-      "Read(//Users/admin/Documents/Code/Ingeni/OPPN/kim-pai-repair-flow-new/**)"
+      "Read(//Users/admin/Documents/Code/Ingeni/OPPN/kim-pai-repair-flow-new/**)",
+      "Bash(claude --version)",
+      "Bash(npx --yes vtsls --version)"
     ],
     "additionalDirectories": [
       "/Users/admin/node_modules/oracledb"
