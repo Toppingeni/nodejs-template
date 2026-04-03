@@ -1,52 +1,21 @@
 {
-    "name": "nodejs-template",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "lint": "eslint . --ext .ts",
-        "lint:fix": "eslint . --ext .ts --fix",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "tsoa:spec": "tsoa spec",
-        "tsoa:routes": "tsoa routes",
-        "tsoa:gen": "npm run tsoa:spec && npm run tsoa:routes",
-        "dev": "npm run tsoa:gen && ts-node-dev --respawn src/server.ts",
-        "build": "npm run tsoa:gen && tsc",
-        "start": "node dist/server.js"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "@types/express": "^5.0.1",
-        "@types/node": "^22.14.0",
-        "@types/sequelize": "^4.28.20",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.7",
-        "express": "^5.1.0",
-        "express-rate-limit": "^8.2.1",
-        "helmet": "^8.1.0",
-        "keys-converter": "^3.0.4",
-        "node-vault-client": "^1.0.2",
-        "oracledb": "^6.8.0",
-        "sequelize": "^6.37.7",
-        "sequelize-oracle": "^3.3.2-0.0",
-        "tns": "^0.2.0",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.8.3",
-        "zod": "^4.3.6"
-    },
-    "devDependencies": {
-        "@types/cors": "^2.8.19",
-        "@types/express-rate-limit": "^5.1.3",
-        "@types/node-vault-client": "^1.0.1",
-        "@types/oracledb": "^6.5.4",
-        "@types/swagger-ui-express": "^4.1.8",
-        "@typescript-eslint/eslint-plugin": "^8.29.1",
-        "@typescript-eslint/parser": "^8.29.1",
-        "eslint": "^9.24.0",
-        "swagger-ui-express": "^5.0.1",
-        "ts-node-dev": "^2.0.0",
-        "tsoa": "^7.0.0-alpha.0"
-    }
+  "name": "fullstack-template",
+  "version": "1.0.0",
+  "description": "Fullstack monorepo template — React + Express + Oracle 11g",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n client,server -c blue,green \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --prefix client",
+    "dev:backend": "npm run dev --prefix server",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "npm run build --prefix client",
+    "build:server": "npm run build --prefix server",
+    "start": "npm run start --prefix server",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "tsoa:gen": "npm run tsoa:gen --prefix server",
+    "lint": "npm run lint --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
 }
