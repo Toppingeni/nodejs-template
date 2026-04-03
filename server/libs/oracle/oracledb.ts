@@ -30,6 +30,9 @@ async function oracleDB(mode: string) {
             poolMin: 2,
             poolMax: 10,
             poolIncrement: 1,
+            ...(config.ORACLE_CLIENT_PATH && {
+                clientDir: config.ORACLE_CLIENT_PATH,
+            }),
         });
         console.log(`OracleDB Connection Pool created for mode: ${mode}`);
     }
