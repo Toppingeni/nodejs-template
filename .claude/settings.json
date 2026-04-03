@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(/.claude/skills/oracle-schema-cache/**)",
+      "Edit(/.claude/skills/tsoa-api-layer-generator/**)",
+      "Edit(/.claude/skills/oracle-db-connector/**)",
+      "Edit(/.claude/skills/oracle-sqltab-generator/**)"
+    ]
+  }
+}
