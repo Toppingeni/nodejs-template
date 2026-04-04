@@ -1,3 +1,8 @@
+---
+name: "backend-development"
+description: "Backend Development (OPPN) — Node.js, TypeScript, TSOA controllers, Oracle 11g, SQLTab, Sequelize, Zod validation. Invoke when building or modifying backend APIs, services, repositories, or database queries."
+---
+
 # Backend Development (OPPN)
 
 ## Commands
@@ -27,19 +32,17 @@ import { BaseController } from "@/controllers/base.controller";
 import { asyncErrorWrapper } from "@/utils/async-error-wrapper";
 
 export class MyController extends BaseController {
-  private myService = new MyService();
+    private myService = new MyService();
 
-  @Post()
-  @SuccessResponse("200", "Success")
-  @Response("500", "Error")
-  async createItem(
-    @Body() body: CreateItemDto
-  ): Promise<Response> {
-    return asyncErrorWrapper(async () => {
-      const result = await this.myService.create(body);
-      return this.handleSuccess(result);
-    }, this.handleError);
-  }
+    @Post()
+    @SuccessResponse("200", "Success")
+    @Response("500", "Error")
+    async createItem(@Body() body: CreateItemDto): Promise<Response> {
+        return asyncErrorWrapper(async () => {
+            const result = await this.myService.create(body);
+            return this.handleSuccess(result);
+        }, this.handleError);
+    }
 }
 ```
 
@@ -52,10 +55,12 @@ export class MyController extends BaseController {
 ## Context & Logger
 
 ### Context (`src/utils/context.ts`)
+
 - JWT context management
 - Use for request-scoped data
 
 ### Logger (`src/utils/logger.ts`)
+
 - Context-aware logging
 - See skill: `logger-system` for full setup
 
@@ -68,17 +73,19 @@ export class MyController extends BaseController {
 ## Oracle 11g
 
 ### Restrictions
+
 - NEVER use `FETCH FIRST`
 - NEVER use `OFFSET`
 - NEVER use `JSON_TABLE`
 
 ### Best Practices
+
 - ALWAYS use bind parameters
 - Use connection pool
 - See skills:
-  - `oracle-db-connector` - Connection, queries, stored procedures
-  - `oracle-schema-cache` - Table schemas and validation
-  - `oracle-sqltab-generator` - SQLTab files and dynamic queries
+    - `oracle-db-connector` - Connection, queries, stored procedures
+    - `oracle-schema-cache` - Table schemas and validation
+    - `oracle-sqltab-generator` - SQLTab files and dynamic queries
 
 ### SQLTab Pattern
 
@@ -87,19 +94,20 @@ import { queryFromSqlTab, commandFromSqlTab, getSqlStmt } from "@/utils/sqltab";
 
 // Static query
 const result = await queryFromSqlTab<Sample>("APP_001", {
-  param1: value1,
+    param1: value1,
 });
 
 // Dynamic query
 const sql = getSqlStmt("APP_002", {
-  "/*where*/": "AND status = :status",
+    "/*where*/": "AND status = :status",
 });
 const result = await queryFromSqlTab<Sample>(sql, {
-  status: "A",
+    status: "A",
 });
 ```
 
 ### Development with SQLTab
+
 - `getSqlStmt` reads from `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
 - Override `SQLTAB_DIR` for custom paths
 - Replace placeholders like `/*where*/` before binding
@@ -107,18 +115,19 @@ const result = await queryFromSqlTab<Sample>(sql, {
 ## Sequelize
 
 ### N+1 Warning
+
 - Watch for N+1 queries
 - Use `include` and `limit` carefully
 
 ```typescript
 // BAD - N+1
 for (const user of users) {
-  const posts = await user.getPosts(); // N queries
+    const posts = await user.getPosts(); // N queries
 }
 
 // GOOD - Eager loading
 const users = await User.findAll({
-  include: [{ model: Post }],
+    include: [{ model: Post }],
 });
 ```
 
@@ -130,8 +139,8 @@ Use **Zod** for validation:
 import { z } from "zod";
 
 const createItemSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
+    name: z.string().min(1),
+    description: z.string().optional(),
 });
 
 type CreateItemDto = z.infer<typeof createItemSchema>;
@@ -142,8 +151,8 @@ type CreateItemDto = z.infer<typeof createItemSchema>;
 ```typescript
 // Use asyncErrorWrapper for all async operations
 return asyncErrorWrapper(async () => {
-  // Business logic
-  return result;
+    // Business logic
+    return result;
 }, this.handleError);
 ```
 
@@ -153,13 +162,13 @@ return asyncErrorWrapper(async () => {
 
 ```typescript
 export class SampleRepository {
-  async findById(id: string): Promise<Sample | null> {
-    return queryFromSqlTab<Sample>("APP_003", { id });
-  }
+    async findById(id: string): Promise<Sample | null> {
+        return queryFromSqlTab<Sample>("APP_003", { id });
+    }
 
-  async create(data: CreateSampleDto): Promise<Sample> {
-    return commandFromSqlTab("APP_004", data);
-  }
+    async create(data: CreateSampleDto): Promise<Sample> {
+        return commandFromSqlTab("APP_004", data);
+    }
 }
 ```
 
@@ -167,12 +176,12 @@ export class SampleRepository {
 
 ```typescript
 export class SampleService {
-  constructor(private repository: SampleRepository) {}
+    constructor(private repository: SampleRepository) {}
 
-  async create(data: CreateSampleDto): Promise<Sample> {
-    // Business logic here
-    return this.repository.create(data);
-  }
+    async create(data: CreateSampleDto): Promise<Sample> {
+        // Business logic here
+        return this.repository.create(data);
+    }
 }
 ```
 

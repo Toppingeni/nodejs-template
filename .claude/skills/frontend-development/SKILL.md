@@ -1,3 +1,8 @@
+---
+name: "frontend-development"
+description: "Frontend Development (OPPN) — React 18, TypeScript, Vite, Tailwind, shadcn/ui patterns, shared components, form patterns, and styling conventions. Invoke when building or modifying frontend pages, components, forms, or UI."
+---
+
 # Frontend Development (OPPN)
 
 ## Commands
@@ -31,12 +36,14 @@ client/components/
 ## Styling Conventions
 
 ### Glassmorphism Theme
+
 - Backgrounds: `bg-white/70` with `backdrop-blur-xl`
 - Borders: `border-slate-200/60` (subtle)
 - Shadows: `shadow-lg shadow-blue-500/30` (colored)
 - Radius: `rounded-xl` or `rounded-2xl`
 
 ### Common Patterns
+
 - Spacing: `p-4 md:p-6`, `gap-3`
 - Buttons: `rounded-xl` with gradient `from-blue-600 to-indigo-600`
 - Tables: `rounded-2xl bg-white/70 shadow-sm backdrop-blur-xl`
@@ -45,7 +52,14 @@ client/components/
 
 ```typescript
 // Forms
-import { Form, FormField, FormFieldItem, FormLabel, FormControl, FormMessage } from "@/components/shared/form";
+import {
+    Form,
+    FormField,
+    FormFieldItem,
+    FormLabel,
+    FormControl,
+    FormMessage,
+} from "@/components/shared/form";
 
 // Search
 import { SearchInput } from "@/components/shared/search";
@@ -179,9 +193,9 @@ function MyFilters({ filters, onChange }: FiltersProps) {
 ```typescript
 // client/constants/status.ts
 export const STATUS_CONFIG = {
-  A: { label: "ใช้งาน", className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
-  D: { label: "ลบแล้ว", className: "bg-red-50 text-red-700 ring-red-600/20" },
-  // Add more statuses here
+    A: { label: "ใช้งาน", className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
+    D: { label: "ลบแล้ว", className: "bg-red-50 text-red-700 ring-red-600/20" },
+    // Add more statuses here
 };
 
 // ALWAYS use getStatusConfig() for new statuses
