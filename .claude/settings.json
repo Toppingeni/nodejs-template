@@ -30,7 +30,12 @@
       "Bash(npx vite:*)",
       "Read(//Users/admin/Documents/Code/Ingeni/OPPN/kim-pai-repair-flow-new/**)",
       "Bash(claude --version)",
-      "Bash(npx --yes vtsls --version)"
+      "Bash(npx --yes vtsls --version)",
+      "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/typescript-lsp/**)",
+      "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/pyright-lsp/**)",
+      "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/example-plugin/**)",
+      "Bash(cat ~/.claude/plugins/marketplaces/claude-plugins-official/plugins/example-plugin/.claude-plugin/*)",
+      "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/**)"
     ],
     "additionalDirectories": [
       "/Users/admin/node_modules/oracledb"

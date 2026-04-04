@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Lock, LogIn, User } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Icons8Login, Icons8User, Icons8Lock } from "@/components/shared/icons/Icons8";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -70,7 +71,7 @@ export default function LoginPage() {
                     {/* Logo / title */}
                     <div className="mb-8 text-center">
                         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30">
-                            <LogIn className="h-7 w-7 text-white" />
+                            <Icons8Login className="h-7 w-7" />
                         </div>
                         <h1 className="text-2xl font-bold text-slate-800">เข้าสู่ระบบ</h1>
                         <p className="mt-1 text-sm text-slate-500">
@@ -89,7 +90,7 @@ export default function LoginPage() {
                             </label>
                             <div className="relative">
                                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                                    <User className="h-4 w-4" />
+                                    <Icons8User className="h-4 w-4" />
                                 </span>
                                 <input
                                     id="userId"
@@ -119,7 +120,7 @@ export default function LoginPage() {
                             </label>
                             <div className="relative">
                                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                                    <Lock className="h-4 w-4" />
+                                    <Icons8Lock className="h-4 w-4" />
                                 </span>
                                 <input
                                     id="password"
@@ -234,7 +235,7 @@ export default function LoginPage() {
                                 </>
                             ) : (
                                 <>
-                                    <LogIn className="h-4 w-4" />
+                                    <Icons8Login className="h-4 w-4" />
                                     <span>เข้าสู่ระบบ</span>
                                 </>
                             )}
