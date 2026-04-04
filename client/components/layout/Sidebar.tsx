@@ -54,7 +54,7 @@ export default function Sidebar({ onItemClick }: SidebarProps) {
             <nav
                 className={cn(
                     "flex flex-col gap-1 pt-4",
-                    isSidebarCollapsed ? "p-1.5 pt-4" : "p-3 pt-4",
+                    isSidebarCollapsed ? "items-center px-1 pt-4" : "p-3 pt-4",
                 )}
                 role="navigation"
             >
@@ -72,7 +72,7 @@ export default function Sidebar({ onItemClick }: SidebarProps) {
                                     isActive
                                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30"
                                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-                                    isSidebarCollapsed && "justify-center px-1 py-2",
+                                    isSidebarCollapsed && "justify-center p-2",
                                 )
                             }
                             aria-label={isSidebarCollapsed ? item.label : undefined}
