@@ -1,188 +1,175 @@
 ---
 name: "tsoa-api-layer-generator"
-description: "Generates TSOA Controller + Service + Repository (Query/Command regions) for this project. Invoke when creating new APIs or endpoints."
+description: "Step-by-step guide for creating a complete TSOA API endpoint (Controller + Service + Repository + SQLTab). Use when creating new APIs or adding endpoints. Walks through schema check, SQLTab creation, and all three layers with code templates."
 ---
 
-# TSOA API Layer Generator (Controller/Service/Repository)
+# TSOA API Layer Generator
 
-Defines the standard for creating layered APIs (Controller -> Service -> Repository), split into two clear regions:
+Step-by-step guide for creating a complete API endpoint following the Controller → Service → Repository pattern. Each step has preconditions and produces artifacts that feed the next step.
 
-- **Query** = SELECT / read operations
-- **Command** = INSERT/UPDATE/DELETE / write operations + transaction
+## When to Use
 
-## File Structure
+- Creating a **new API endpoint** (GET, POST, PATCH, DELETE)
+- Adding a **new method** to an existing controller
+- Setting up a **new feature module** (controller + service + repository)
 
-- Controller: `src/controllers/<name>Controller.ts`
-- Service: `src/services/<name>Service.ts`
-- Repository: `src/repositories/<name>Repository.ts`
-- SQLTab (Dev): `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
-- Schema Cache: `src/schema/<table>.md`
+## Workflow Overview
 
-## Preconditions (mandatory)
-
-1. Oracle 11g — never use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
-2. Before writing SQL, check `src/schema/<table>.md`; if missing, fetch via Oracle MCP and save (Skill `oracle-schema-cache`)
-3. Use SQLTab for native SQL via `queryFromSqlTab`/`commandFromSqlTab` (Skill `oracle-sqltab-generator`)
-4. Bind params only (never concat strings); use pool (Skill `oracle-db-connector`)
-
-## Step-by-step (create 1 new endpoint)
-
-### Step 0) Confirm APP_ID + Controller Glob
-
-- Dev SQLTab reads from `<APP_ID>_<SQL_NO>.sql`; `APP_ID` comes from env (`config.APP_ID`)
-- If `APP_ID` is unknown, ask the user immediately (never guess)
-- If `SQL_NO` starting number is unknown, ask the user immediately (never guess)
-- Ensure `tsoa.json` `controllerPathGlobs` matches controller filenames (e.g. `*controller.ts` or `*Controller.ts`)
-
-### Step 1) Prepare schema cache
-
-- If missing: create `src/schema/<table>.md` (compact format)
-- Must include: column name, type/len, nullable, pk
-
-### Step 2) Prepare SQLTab (Dev-first)
-
-- Create `src/sqltabs/<APP_ID>_<SQL_NO>.sql` (1 statement per file)
-- Example filename: `99_1.sql`
-- Before assigning `<SQL_NO>`, check existing files in `src/sqltabs/` for the same `<APP_ID>` to avoid collisions (if unable to check, ask the user)
-
-Query example:
-
-```sql
-SELECT USER_ID, USERNAME
-FROM USERS
-WHERE STATUS = :status
+```
+Step 0: Confirm APP_ID + SQL_NO
+    ↓
+Step 1: Prepare Schema Cache (skill: oracle-schema-cache)
+    ↓
+Step 2: Create SQLTab Files (skill: oracle-sqltab-generator)
+    ↓
+Step 3: Create Repository
+    ↓
+Step 4: Create Service
+    ↓
+Step 5: Create Controller
+    ↓
+Step 6: Generate TSOA Routes (npm run tsoa:gen)
+    ↓
+Step 7: Verify
 ```
 
-Command example:
+---
 
-```sql
-UPDATE USERS
-SET STATUS = :status
-WHERE USER_ID = :userId
+## Step 0: Confirm APP_ID + SQL_NO
+
+**STOP and ask the user if any of these are unknown.**
+
+### APP_ID Resolution
+
+1. Check config: `config.APP_ID` or env files (`.env`, `.env.<NODE_ENV>`, `.env.sample`)
+2. If unknown → **ask the user immediately** (never guess)
+
+### SQL_NO Resolution
+
+1. Scan existing files in `src/sqltabs/` for the same APP_ID
+2. Pick next unused number (starts at 1, increments by 1)
+3. If uncertain → **ask the user immediately**
+
+### Controller Glob Check
+
+- Verify `tsoa.json` `controllerPathGlobs` matches your controller filename pattern
+- Common patterns: `*controller.ts` or `*Controller.ts`
+
+---
+
+## Step 1: Prepare Schema Cache
+
+Invoke skill: **`oracle-schema-cache`**
+
+- Check `src/schema/<table>.md` for each table you'll query
+- If missing: fetch via Oracle MCP and save using the [schema template](../oracle-schema-cache/templates/schema-template.md)
+- **Must have**: column name, type/length, nullable, PK
+
+---
+
+## Step 2: Create SQLTab Files
+
+Invoke skill: **`oracle-sqltab-generator`**
+
+- Create `src/sqltabs/<APP_ID>_<SQL_NO>.sql` for each query (1 statement per file)
+- Use bind parameters (`:param`) — never string concatenation
+- For dynamic queries, use placeholders: `/*where*/`, `/*orderBy*/`
+- Oracle 11g: NEVER use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
+
+See [SQLTab templates](../oracle-sqltab-generator/templates/) for examples.
+
+---
+
+## Step 3: Create Repository
+
+File: `src/repositories/<name>Repository.ts`
+
+Use the template: [repository template](../backend-development/templates/repository-template.md)
+
+Key rules:
+
+- Define row types matching Oracle UPPER_CASE column names exactly
+- Use `#region Query` / `#region Command` to separate reads from writes
+- SQL_NO must match the SQLTab files from Step 2
+- Static queries: `oracle.queryFromSqlTab()` / `oracle.commandFromSqlTab()`
+- Dynamic queries: `oracle.getSqlStmt()` + placeholder replacement + `oracle.query()`
+
+---
+
+## Step 4: Create Service
+
+File: `src/services/<name>Service.ts`
+
+Use the template: [service template](../backend-development/templates/service-template.md)
+
+Key rules:
+
+- Validate ALL input with Zod schemas before calling repository
+- Map Oracle UPPER_CASE rows to camelCase DTOs
+- Use `#region Query` / `#region Command` to separate reads from writes
+- Throw meaningful typed errors
+
+---
+
+## Step 5: Create Controller
+
+File: `src/controllers/<name>Controller.ts`
+
+Use the template: [controller template](../backend-development/templates/controller-template.md)
+
+Key rules:
+
+- Extend `BaseController`
+- Zero business logic — delegate to service
+- Wrap all handlers in `asyncErrorWrapper`
+- Use TSOA decorators: `@Route`, `@Tags`, `@Get/@Post/@Patch/@Delete`, `@SuccessResponse`, `@Response`
+- Define request/response types above the class
+
+---
+
+## Step 6: Generate TSOA Routes
+
+```bash
+npm run tsoa:gen
 ```
 
-### Step 3) Repository (separate Query/Command regions)
+**ALWAYS run this after adding or editing a controller.** Never edit generated files:
 
-Template:
+- `src/tsoa/routes.ts` — auto-generated
+- `src/tsoa/swagger.json` — auto-generated
 
-```ts
-import { getOracle } from "../libs/oracle";
+---
 
-export type UserRow = {
-  USER_ID: number;
-  USERNAME: string;
-};
+## Step 7: Verify
 
-class UsersRepository {
-  // #region Query
-  async getUsersByStatus(status: string) {
-    const oracle = getOracle();
-    return oracle.queryFromSqlTab<UserRow>(1, { status });
-  }
-  // #endregion
+### Checklist
 
-  // #region Command
-  async updateUserStatus(userId: number, status: string) {
-    const oracle = getOracle();
-    return oracle.commandFromSqlTab(2, { userId, status });
-  }
-  // #endregion
-}
+- [ ] Schema cache exists in `src/schema/` for all used tables
+- [ ] SQLTab files exist in `src/sqltabs/` for all queries
+- [ ] Repository uses `#region Query` and `#region Command`
+- [ ] Service validates input with Zod before calling repository
+- [ ] Controller extends BaseController with TSOA decorators
+- [ ] Ran `npm run tsoa:gen` after controller changes
+- [ ] No business logic in controller
+- [ ] All SQL uses bind parameters (no string concatenation)
+- [ ] No Oracle 11g incompatible SQL (`FETCH FIRST`, `OFFSET`, `JSON_TABLE`)
 
-export default new UsersRepository();
+---
+
+## File Structure (per feature)
+
+```
+src/
+├── controllers/<name>Controller.ts    # TSOA controller
+├── services/<name>Service.ts          # Business logic + Zod
+├── repositories/<name>Repository.ts   # Database access
+├── sqltabs/<APP_ID>_<SQL_NO>.sql      # SQL statements
+└── schema/<table>.md                  # Table schema cache
 ```
 
-Rules:
+## Related Skills
 
-- SQL*NO (starts at 1, increments by 1) must match `src/sqltabs/<APP_ID>*<SQL_NO>.sql`in dev or`SQL_TAB_OPPN` in prod
-- For dynamic SQL, use `oracle.getSqlStmt(sqlNo)` then replace only placeholders (e.g. `/*where*/`) before passing to `oracle.query()`
-
-### Step 4) Service (validate with Zod + map DTO)
-
-Template:
-
-```ts
-import { z } from "zod";
-import usersRepository from "../repositories/usersRepository";
-
-const GetUsersInputSchema = z.object({
-  status: z.string().min(1),
-});
-
-export class UsersService {
-  constructor(private readonly repo: typeof usersRepository) {}
-
-  // #region Query
-  async getUsers(input: unknown) {
-    const { status } = GetUsersInputSchema.parse(input);
-    const rows = await this.repo.getUsersByStatus(status);
-    return rows;
-  }
-  // #endregion
-
-  // #region Command
-  async updateStatus(input: unknown) {
-    const schema = z.object({
-      userId: z.coerce.number().int().positive(),
-      status: z.string().min(1),
-    });
-    const { userId, status } = schema.parse(input);
-    const result = await this.repo.updateUserStatus(userId, status);
-    return { rowsAffected: result.rowsAffected ?? 0 };
-  }
-  // #endregion
-}
-
-export default new UsersService(usersRepository);
-```
-
-### Step 5) Controller (TSOA)
-
-Template:
-
-```ts
-import { Body, Controller, Get, Patch, Route, Tags } from "tsoa";
-import usersService from "../services/usersService";
-
-type GetUsersRequest = { status: string };
-type UserDto = { userId: number; username: string };
-type GetUsersResponse = { message: string; data: UserDto[] };
-
-type UpdateStatusRequest = { userId: number; status: string };
-type UpdateStatusResponse = { message: string; rowsAffected: number };
-
-@Route("users")
-@Tags("Users")
-export class UsersController extends Controller {
-  @Get("/")
-  public async getUsers(): Promise<GetUsersResponse> {
-    const rows = await usersService.getUsers({ status: "ACTIVE" });
-    const data = rows.map((r) => ({
-      userId: r.USER_ID,
-      username: r.USERNAME,
-    }));
-    return { message: "Success", data };
-  }
-
-  @Patch("/status")
-  public async updateStatus(
-    @Body() body: UpdateStatusRequest,
-  ): Promise<UpdateStatusResponse> {
-    const result = await usersService.updateStatus(body);
-    return { message: "Success", rowsAffected: result.rowsAffected };
-  }
-}
-```
-
-Rules:
-
-- After adding/editing a controller, run `npm run tsoa:gen`
-- Never edit generated files (`src/tsoa/routes.ts`, `src/tsoa/swagger.json`)
-
-## Final Checklist
-
-- Schema cache exists in `src/schema/` for all used tables
-- SQLTab files exist in `src/sqltabs/` (Dev) and/or INSERT plan for `SQL_TAB_OPPN` (Prod)
-- Repository uses `// #region Query` and `// #region Command`
-- Service validates input with Zod before calling repo
-- Controller is TSOA; ran `npm run tsoa:gen` after changes
+- `oracle-schema-cache` — Step 1
+- `oracle-sqltab-generator` — Step 2
+- `oracle-db-connector` — Oracle method patterns for Step 3
+- `backend-development` — Templates for Steps 3-5

@@ -1,52 +1,82 @@
 ---
 name: "oracle-schema-cache"
-description: "Caches compact Oracle table schemas locally to reduce token and MCP calls. Invoke when generating SQL, verifying column names/types, or onboarding a new table."
+description: "Fetches and caches Oracle table schemas locally in compact format. Use BEFORE writing any SQL — check src/schema/<table>.md first; if missing, fetch via Oracle MCP and save. Ensures column names, types, and constraints are verified before query creation."
 ---
 
 # Oracle Schema Cache
 
-Stores compact table schemas in the repo to save tokens and reduce redundant Oracle MCP calls when writing queries.
+Ensures table schemas are verified before writing any SQL. Schemas are cached locally in `src/schema/` to save tokens and avoid redundant MCP calls.
 
-## Directory
+## When to Use
 
-- Schema files: `src/schema/`
-- 1 table = 1 file
-- Filename: `<table>.md` (lowercase), e.g. `users.md`
+- **Before writing ANY SQL query** — always check schema first
+- **Before creating SQLTab files** — verify column names and types
+- **When onboarding a new table** — fetch and cache its schema
+- **When a column mismatch error occurs** — refresh the schema cache
 
-## Format (token-efficient)
+## Step-by-Step Instructions
 
-One line per column, only essential info:
+### Step 1: Check if Schema Exists
 
-```text
-columns:
-- COL_NAME DATA_TYPE(LEN|PREC,SCALE) [PK] [NN] [NULL]
+Look for `src/schema/<table>.md` (lowercase filename).
+
+```
+src/schema/users.md
+src/schema/sql_tab_oppn.md
 ```
 
-Example:
+**If file exists**: Read it and proceed with your SQL work.
+**If file is missing or outdated**: Continue to Step 2.
 
-```text
-columns:
-- USER_ID NUMBER(10) PK NN
-- USERNAME VARCHAR2(50) NN
-- STATUS VARCHAR2(10) NN
-- CREATED_AT DATE NULL
+### Step 2: Fetch Schema from Oracle MCP
+
+Use the `mcp__oracle__getOracleTableSchema` tool:
+
+```
+Table: KPDBA.<TABLE_NAME>
 ```
 
-Abbreviations: `PK` = primary key, `NN` = not null, `NULL` = nullable
+This returns column definitions including name, data type, length, nullable, and primary key info.
 
-## Mandatory Workflow (when writing SQL)
+### Step 3: Save in Compact Format
 
-1. Always check `src/schema/<table>.md` before writing any SQL
-2. If schema file missing or incomplete, fetch via Oracle MCP and save summary using the format above
-3. When writing SQL:
-   - Verify column/table names match schema exactly
-   - Check data types/lengths (e.g. VARCHAR2(50)) to prevent overflow/type mismatch
-   - Always use bind params, never concat strings
-4. If columns are added/modified in DB, refresh the schema file immediately
+Create `src/schema/<table>.md` using the template: [templates/schema-template.md](templates/schema-template.md)
 
-## SQLTab Integration
+Format: one line per column, only essential info.
 
-When creating a SQLTab:
+### Step 4: Verify Before Writing SQL
 
-- Check schema first
-- Then create `src/sqltabs/<APP_ID>_<SQL_NO>.sql` or insert script per skill `oracle-sqltab-generator`
+Before writing any SQL, cross-check:
+
+1. **Column names** — match exactly (Oracle is case-sensitive in metadata)
+2. **Data types** — ensure bind parameters match (e.g., NUMBER vs VARCHAR2)
+3. **Lengths** — prevent overflow (e.g., VARCHAR2(50) means max 50 bytes)
+4. **Nullable** — handle NULL cases in queries where needed
+
+### Step 5: Keep Cache Fresh
+
+- If you discover columns have been added/modified in DB, **refresh immediately**
+- Delete the old file and re-fetch from Oracle MCP
+- Never rely on stale schema data
+
+---
+
+## Rules
+
+1. **NEVER write SQL without checking schema first** — this is the most common source of bugs
+2. **NEVER guess column names** — always verify against cached schema
+3. **One table = one file** — filename is lowercase table name
+4. **Keep format compact** — minimize tokens, no extra prose in schema files
+5. **Bind parameters must match types** — NUMBER columns get number binds, VARCHAR2 get string binds
+
+## Integration
+
+This skill is called by:
+
+- `backend-development` (Phase 2, Step 2.1)
+- `tsoa-api-layer-generator` (Step 1)
+- `oracle-sqltab-generator` (before creating any query)
+
+## Templates
+
+- [Schema Template](templates/schema-template.md) — compact schema format

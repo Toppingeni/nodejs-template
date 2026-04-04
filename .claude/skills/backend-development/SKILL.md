@@ -1,201 +1,161 @@
 ---
 name: "backend-development"
-description: "Backend Development (OPPN) — Node.js, TypeScript, TSOA controllers, Oracle 11g, SQLTab, Sequelize, Zod validation. Invoke when building or modifying backend APIs, services, repositories, or database queries."
+description: "Orchestrates backend API development for OPPN (Node.js + TSOA + Oracle 11g). Use when building new endpoints, services, repositories, or database operations. Guides through schema check → implementation → review workflow using specialized agents and skills."
 ---
 
 # Backend Development (OPPN)
 
+A systematic workflow for building backend APIs. Orchestrates the full cycle: schema preparation → API implementation → code review, delegating to specialized agents and referencing related skills.
+
+## Workflow Overview
+
+```
+Phase 1: Understand Requirements
+    ↓
+Phase 2: Schema & Query Preparation (skills: oracle-schema-cache, oracle-sqltab-generator)
+    ↓
+Phase 3: Implementation (agent: backend-builder)
+    ↓
+Phase 4: Code Review (agent: code-reviewer)
+```
+
+---
+
+## Phase 1: Understand Requirements
+
+### Objectives
+
+- Clarify what API/endpoint the user wants to build
+- Identify which Oracle tables are involved
+- Determine APP_ID and SQL_NO for SQLTab files
+
+### Questions to Ask (if unclear)
+
+1. **What**: What endpoint/feature are you building? (CRUD, report, workflow?)
+2. **Tables**: Which Oracle tables are involved?
+3. **APP_ID**: What is the APP_ID for this system? (check `.env` or `config.APP_ID` first)
+4. **SQL_NO**: Check existing files in `src/sqltabs/` to determine next available number
+
+### Decision Point: Route to Correct Workflow
+
+| Scenario                     | Workflow                                                         |
+| ---------------------------- | ---------------------------------------------------------------- |
+| **New endpoint (full CRUD)** | Phase 2 → 3 → 4 (full workflow)                                  |
+| **New endpoint (simple)**    | Phase 2 → 3 → 4 (full workflow, but faster)                      |
+| **Bug fix or small change**  | Skip to Phase 3 → 4                                              |
+| **Full-stack feature**       | Run Phase 2-3 here, then run `frontend-development` skill for UI |
+| **Schema/table design only** | Phase 2 only                                                     |
+
+---
+
+## Phase 2: Schema & Query Preparation
+
+Before writing any code, prepare the database layer.
+
+### Step 2.1: Check/Create Schema Cache
+
+Invoke skill: **`oracle-schema-cache`**
+
+- Check `src/schema/<table>.md` for each table involved
+- If missing: fetch via Oracle MCP (`mcp__oracle__getOracleTableSchema`) and save in compact format
+- Verify column names, types, and constraints before writing SQL
+
+### Step 2.2: Create SQLTab Files
+
+Invoke skill: **`oracle-sqltab-generator`**
+
+- Determine APP_ID (from `.env` or ask user)
+- Determine next SQL_NO (scan `src/sqltabs/` for existing files)
+- Create `src/sqltabs/<APP_ID>_<SQL_NO>.sql` for each query needed
+- Use bind parameters (`:param`) — never concatenate strings
+- Oracle 11g restrictions: NEVER use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
+
+### Output of Phase 2
+
+- Schema files in `src/schema/` for all tables used
+- SQLTab `.sql` files in `src/sqltabs/` for all queries needed
+- Clear mapping: which SQL_NO does what
+
+**Present to user and get approval before proceeding.**
+
+---
+
+## Phase 3: Implementation
+
+### Agent: `backend-builder`
+
+Launch the **backend-builder** agent with a prompt that includes:
+
+1. The requirements and approved schema/SQLTab from Phase 2
+2. Architecture: **Controller → Service → Repository** (see [references/architecture.md](references/architecture.md))
+3. Templates to follow:
+    - Controller: [templates/controller-template.md](templates/controller-template.md)
+    - Service: [templates/service-template.md](templates/service-template.md)
+    - Repository: [templates/repository-template.md](templates/repository-template.md)
+4. Key rules:
+    - Controller: extends `BaseController`, uses `handleSuccess()`/`handleError()`, wrapped in `asyncErrorWrapper()`
+    - Service: business logic + Zod validation, `#region Query` / `#region Command`
+    - Repository: uses `queryFromSqlTab`/`commandFromSqlTab`, `#region Query` / `#region Command`
+    - TSOA decorators on controller (`@Route`, `@Get`, `@Post`, `@Tags`, `@Security`)
+    - After controller changes: run `npm run tsoa:gen`
+    - NEVER edit generated files (`src/tsoa/routes.ts`, `src/tsoa/swagger.json`)
+5. Related skills for Oracle patterns:
+    - `oracle-db-connector` — Oracle connection, query, stored procedure patterns
+    - `oracle-sqltab-generator` — SQLTab usage with `queryFromSqlTab`/`commandFromSqlTab`
+
+### What the Agent Produces
+
+- Controller with TSOA decorators
+- Service with Zod validation + business logic
+- Repository with SQLTab integration
+- Updated TSOA routes (via `npm run tsoa:gen`)
+
+---
+
+## Phase 4: Code Review
+
+### Agent: `code-reviewer`
+
+**ALWAYS run this after Phase 3 completes.** Do not wait for the user to ask.
+
+Launch the **code-reviewer** agent to check:
+
+- Architecture compliance: no business logic in controller, no DB access outside repository
+- Oracle 11g compatibility: no `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
+- Bind parameters used everywhere (no SQL string concatenation)
+- Zod validation in service layer
+- Error handling with `asyncErrorWrapper`
+- TSOA routes regenerated after controller changes
+- SQLTab files match repository usage
+
+### If Issues Found
+
+- P0/P1 issues: Fix immediately, then re-run code-reviewer
+- P2-P4 issues: Present to user for decision
+
+---
+
 ## Commands
 
-- **Dev:** `npm run dev`
-- **Lint:** `npm run lint`
-- **Build:** `npm run build` (tsoa auto-runs)
-- **Generate TSOA:** `npm run tsoa:gen`
+- `npm run dev` — Start dev server
+- `npm run lint` — Lint code
+- `npm run build` — Build (auto-runs TSOA)
+- `npm run tsoa:gen` — Regenerate TSOA routes after controller changes
 
-## Architecture
+## References
 
-```
-Controller → Service → Repository
-```
+- [Architecture](references/architecture.md) — Controller → Service → Repository pattern details, file structure
 
-- **Controller:** No business logic, just request/response handling
-- **Service:** Business logic layer
-- **Repository:** Database access layer
-- **Bootstrap:** Application initialization in `src/bootstrap/`
+## Templates
 
-## Controller Pattern
+- [Controller Template](templates/controller-template.md) — TSOA controller with BaseController
+- [Service Template](templates/service-template.md) — Business logic + Zod validation
+- [Repository Template](templates/repository-template.md) — SQLTab integration with Query/Command regions
 
-Extend `BaseController` and use provided utilities:
+## Related Skills
 
-```typescript
-import { BaseController } from "@/controllers/base.controller";
-import { asyncErrorWrapper } from "@/utils/async-error-wrapper";
-
-export class MyController extends BaseController {
-    private myService = new MyService();
-
-    @Post()
-    @SuccessResponse("200", "Success")
-    @Response("500", "Error")
-    async createItem(@Body() body: CreateItemDto): Promise<Response> {
-        return asyncErrorWrapper(async () => {
-            const result = await this.myService.create(body);
-            return this.handleSuccess(result);
-        }, this.handleError);
-    }
-}
-```
-
-### Key Methods
-
-- `handleSuccess(data)` - Success response
-- `handleError(error)` - Error response
-- `asyncErrorWrapper(fn, errorFn)` - Async error handling
-
-## Context & Logger
-
-### Context (`src/utils/context.ts`)
-
-- JWT context management
-- Use for request-scoped data
-
-### Logger (`src/utils/logger.ts`)
-
-- Context-aware logging
-- See skill: `logger-system` for full setup
-
-## TSOA Rules
-
-- **NEVER edit:** `src/tsoa/routes.ts`, `src/tsoa/swagger.json`
-- **After editing controller:** Run `npm run tsoa:gen`
-- See skill: `tsoa-api-layer-generator` for full patterns
-
-## Oracle 11g
-
-### Restrictions
-
-- NEVER use `FETCH FIRST`
-- NEVER use `OFFSET`
-- NEVER use `JSON_TABLE`
-
-### Best Practices
-
-- ALWAYS use bind parameters
-- Use connection pool
-- See skills:
-    - `oracle-db-connector` - Connection, queries, stored procedures
-    - `oracle-schema-cache` - Table schemas and validation
-    - `oracle-sqltab-generator` - SQLTab files and dynamic queries
-
-### SQLTab Pattern
-
-```typescript
-import { queryFromSqlTab, commandFromSqlTab, getSqlStmt } from "@/utils/sqltab";
-
-// Static query
-const result = await queryFromSqlTab<Sample>("APP_001", {
-    param1: value1,
-});
-
-// Dynamic query
-const sql = getSqlStmt("APP_002", {
-    "/*where*/": "AND status = :status",
-});
-const result = await queryFromSqlTab<Sample>(sql, {
-    status: "A",
-});
-```
-
-### Development with SQLTab
-
-- `getSqlStmt` reads from `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
-- Override `SQLTAB_DIR` for custom paths
-- Replace placeholders like `/*where*/` before binding
-
-## Sequelize
-
-### N+1 Warning
-
-- Watch for N+1 queries
-- Use `include` and `limit` carefully
-
-```typescript
-// BAD - N+1
-for (const user of users) {
-    const posts = await user.getPosts(); // N queries
-}
-
-// GOOD - Eager loading
-const users = await User.findAll({
-    include: [{ model: Post }],
-});
-```
-
-## Validation
-
-Use **Zod** for validation:
-
-```typescript
-import { z } from "zod";
-
-const createItemSchema = z.object({
-    name: z.string().min(1),
-    description: z.string().optional(),
-});
-
-type CreateItemDto = z.infer<typeof createItemSchema>;
-```
-
-## Error Handling
-
-```typescript
-// Use asyncErrorWrapper for all async operations
-return asyncErrorWrapper(async () => {
-    // Business logic
-    return result;
-}, this.handleError);
-```
-
-## Common Patterns
-
-### Repository Pattern
-
-```typescript
-export class SampleRepository {
-    async findById(id: string): Promise<Sample | null> {
-        return queryFromSqlTab<Sample>("APP_003", { id });
-    }
-
-    async create(data: CreateSampleDto): Promise<Sample> {
-        return commandFromSqlTab("APP_004", data);
-    }
-}
-```
-
-### Service Pattern
-
-```typescript
-export class SampleService {
-    constructor(private repository: SampleRepository) {}
-
-    async create(data: CreateSampleDto): Promise<Sample> {
-        // Business logic here
-        return this.repository.create(data);
-    }
-}
-```
-
-## File Structure
-
-```
-src/
-├── bootstrap/           # App initialization
-├── controllers/         # TSOA controllers
-├── services/            # Business logic
-├── repositories/         # Database access
-├── models/              # Sequelize models
-├── utils/               # Context, logger, helpers
-├── sqltabs/             # SQLTab .sql files
-├── tsoa/                # Generated (don't edit)
-└── schema/              # Table documentation
-```
+- `oracle-db-connector` — Oracle connections, queries, stored procedures
+- `oracle-schema-cache` — Table schemas and column validation
+- `oracle-sqltab-generator` — SQLTab file generation and dynamic queries
+- `tsoa-api-layer-generator` — Full step-by-step endpoint creation guide
+- `logger-system` — Context-aware logging setup

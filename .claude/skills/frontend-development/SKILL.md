@@ -1,270 +1,154 @@
 ---
 name: "frontend-development"
-description: "Frontend Development (OPPN) — React 18, TypeScript, Vite, Tailwind, shadcn/ui patterns, shared components, form patterns, and styling conventions. Invoke when building or modifying frontend pages, components, forms, or UI."
+description: "Orchestrates frontend feature development for OPPN (React 18 + Vite + Tailwind). Use when building new pages, components, forms, or UI features. Guides through design → build → review workflow using specialized agents. Also use for frontend bug fixes, UI changes, or adding new components."
 ---
 
 # Frontend Development (OPPN)
 
+A systematic workflow for building frontend features. Orchestrates the full cycle: design specification → implementation → code review, delegating to specialized agents at each phase.
+
+## Workflow Overview
+
+```
+Phase 1: Understand Requirements
+    ↓
+Phase 2: Design Specification (agent: frontend-design-spec)
+    ↓
+Phase 3: Implementation (agent: frontend-builder)
+    ↓
+Phase 4: Code Review (agent: code-reviewer)
+```
+
+---
+
+## Phase 1: Understand Requirements
+
+### Objectives
+
+- Clarify what the user wants to build
+- Identify scope: new page, new component, modification, or bug fix
+- Determine if backend API exists or needs to be built first
+
+### Questions to Ask (if unclear)
+
+1. **What**: What page/component/feature are you building?
+2. **Data**: What data does this display or collect? Does the API exist?
+3. **Scope**: New page, add to existing page, or modify existing component?
+4. **Special behavior**: Any specific interactions, validations, or edge cases?
+
+### Decision Point: Route to Correct Workflow
+
+| Scenario                                          | Workflow                                                          |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| **New page or complex feature**                   | Phase 2 → 3 → 4 (full workflow)                                   |
+| **Small change** (add hook, fix bug, connect API) | Skip to Phase 3 → 4                                               |
+| **Full-stack feature** (needs backend too)        | Run `backend-development` skill for API first, then continue here |
+| **Design only** (wireframe/spec request)          | Phase 2 only                                                      |
+
+---
+
+## Phase 2: Design Specification
+
+### Agent: `frontend-design-spec`
+
+Launch the **frontend-design-spec** agent with a prompt that includes:
+
+1. The user's requirements (what they want to build)
+2. Project context: React 18 + Vite + Tailwind CSS + shadcn/ui (Radix UI)
+3. **Design system** from skill: **`design-system`** (colors, glassmorphism, typography, icons, spacing)
+4. Styling conventions from [references/styling-conventions.md](references/styling-conventions.md)
+5. Shared components that MUST be used from [references/shared-components.md](references/shared-components.md)
+6. Any existing pages/components to reference for consistency
+
+### What the Agent Produces
+
+- Component breakdown with layout specs
+- User flow with all states (loading, empty, error, success)
+- Form fields with validation rules (if applicable)
+- Responsive behavior notes
+
+### After Design Spec
+
+- Present the design spec to the user
+- **Get approval before proceeding to Phase 3**
+- If user requests changes, re-run frontend-design-spec with feedback
+
+---
+
+## Phase 3: Implementation
+
+### Agent: `frontend-builder`
+
+Launch the **frontend-builder** agent with a prompt that includes:
+
+1. The approved design spec from Phase 2 (or user's direct instructions for small tasks)
+2. Shared components reference: [references/shared-components.md](references/shared-components.md)
+3. Styling conventions: [references/styling-conventions.md](references/styling-conventions.md)
+4. Page template to follow: [templates/page-template.md](templates/page-template.md)
+5. Form template to follow (if applicable): [templates/form-template.md](templates/form-template.md)
+6. Key rules:
+    - MUST use shared components (never recreate)
+    - MUST use React Hook Form + Zod for all forms (never native `<form>`)
+    - MUST use React Query for data fetching (never raw fetch/useEffect)
+    - MUST use Tailwind classes (never inline styles)
+    - NEVER modify `components/ui/` (shadcn/ui primitives)
+
+### What the Agent Produces
+
+- Working React components with TypeScript
+- TanStack Query hooks for data fetching
+- Zod validation schemas for forms
+- All states handled (loading, error, empty, success)
+
+---
+
+## Phase 4: Code Review
+
+### Agent: `code-reviewer`
+
+**ALWAYS run this after Phase 3 completes.** Do not wait for the user to ask.
+
+Launch the **code-reviewer** agent to check:
+
+- Shared components used correctly (not duplicated)
+- Form pattern followed (React Hook Form + Zod, not native `<form>`)
+- React Query used for all API calls
+- No inline styles, no `any` types
+- Glassmorphism styling conventions followed
+- Accessibility basics (ARIA labels, keyboard navigation)
+
+### If Issues Found
+
+- P0/P1 issues: Fix immediately, then re-run code-reviewer
+- P2-P4 issues: Present to user for decision
+
+---
+
 ## Commands
 
-- **Dev:** `npm run dev:frontend`
-- **Lint:** `npm run lint:client`
-- **Build:** `npm run build:client`
+- `npm run dev:frontend` — Start dev server
+- `npm run lint:client` — Lint client code
+- `npm run build:client` — Build client
 
-## Tech Stack
+## References
 
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- Radix UI (shadcn/ui)
-- React Router DOM
-- React Query
-- React Hook Form
-- Zod
+- [Shared Components](references/shared-components.md) — All shared components with imports and usage
+- [Styling Conventions](references/styling-conventions.md) — Glassmorphism theme, Tailwind patterns
 
-## Component Architecture
+## Templates
 
-```
-client/components/
-├── ui/           # shadcn/ui primitives - NEVER modify
-├── layout/       # Header, Sidebar, MainLayout
-├── shared/       # Reusable components - USE EVERYWHERE
-└── pages/        # Page-specific components
-```
-
-## Styling Conventions
-
-### Glassmorphism Theme
-
-- Backgrounds: `bg-white/70` with `backdrop-blur-xl`
-- Borders: `border-slate-200/60` (subtle)
-- Shadows: `shadow-lg shadow-blue-500/30` (colored)
-- Radius: `rounded-xl` or `rounded-2xl`
-
-### Common Patterns
-
-- Spacing: `p-4 md:p-6`, `gap-3`
-- Buttons: `rounded-xl` with gradient `from-blue-600 to-indigo-600`
-- Tables: `rounded-2xl bg-white/70 shadow-sm backdrop-blur-xl`
-
-## Shared Components (MUST USE)
-
-```typescript
-// Forms
-import {
-    Form,
-    FormField,
-    FormFieldItem,
-    FormLabel,
-    FormControl,
-    FormMessage,
-} from "@/components/shared/form";
-
-// Search
-import { SearchInput } from "@/components/shared/search";
-
-// Badges
-import { StatusBadge } from "@/components/shared/badge";
-
-// Table
-import { TablePagination, EmptyState } from "@/components/shared/table";
-
-// Loading
-import { PageLoader } from "@/components/shared/loading";
-```
-
-## Form Pattern (React Hook Form + FormProvider)
-
-ALL forms MUST use this pattern:
-
-```typescript
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Form, FormField, FormFieldItem, FormLabel, FormControl, FormMessage } from "@/components/shared/form";
-
-const schema = z.object({
-  name: z.string().min(1, "Required message"),
-  description: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-function MyForm({ initialData, onSubmit, onCancel }: FormProps) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: initialData?.name ?? "", description: initialData?.description ?? "" },
-  });
-
-  return (
-    <Form form={form} onSubmit={onSubmit}>
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormFieldItem>
-            <FormLabel required>Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormFieldItem>
-        )}
-      />
-    </Form>
-  );
-}
-```
-
-### Form Rules
-
-- NEVER use native `<form>` tag - always use `<Form>` component
-- NEVER use raw `register()` - always use `<FormField>` with `render` prop
-- Validation: Zod schema with `zodResolver`
-- Error handling: `<FormMessage />` shows validation errors automatically
-
-## Status Badges
-
-```typescript
-import { StatusBadge } from "@/components/shared/badge";
-
-// Uses STATUS_CONFIG from constants/status.ts
-<StatusBadge status="A" />  // ใช้งาน
-<StatusBadge status="D" />  // ลบแล้ว
-<StatusBadge status="X" customLabel="Custom" />  // Custom label
-```
-
-## Tables
-
-### Pagination
-
-```typescript
-import { TablePagination } from "@/components/shared/table";
-
-<TablePagination
-  currentPage={pageIndex}
-  totalPages={totalPages}
-  totalItems={data.length}
-  pageSize={pageSize}
-  onPageChange={setPage}
-/>
-```
-
-### Empty State
-
-```typescript
-import { EmptyState } from "@/components/shared/table";
-
-<EmptyState
-  title="No data found"
-  description="Try adjusting filters"
-  action={<Button onClick={onCreate}>Create</Button>}
-/>
-```
-
-## Search & Filters
-
-```typescript
-import { SearchInput } from "@/components/shared/search";
-import { useDebounce } from "@/hooks";
-
-function MyFilters({ filters, onChange }: FiltersProps) {
-  const handleSearchChange = (value: string) => {
-    onChange({ ...filters, search: value || undefined });
-  };
-
-  // Optional: Debounce for large datasets/API calls
-  const debouncedSearch = useDebounce(filters.search, 300);
-
-  return (
-    <SearchInput
-      value={filters.search ?? ""}
-      onChange={handleSearchChange}
-      placeholder="Search..."
-      className="flex-1"
-    />
-  );
-}
-```
-
-## Constants
-
-```typescript
-// client/constants/status.ts
-export const STATUS_CONFIG = {
-    A: { label: "ใช้งาน", className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
-    D: { label: "ลบแล้ว", className: "bg-red-50 text-red-700 ring-red-600/20" },
-    // Add more statuses here
-};
-
-// ALWAYS use getStatusConfig() for new statuses
-import { getStatusConfig } from "@/constants/status";
-```
-
-## Custom Hooks
-
-```typescript
-import { useDebounce, useLocalStorage, useIsMobile } from "@/hooks";
-
-// Debounce search/filter values
-const debouncedSearch = useDebounce(searchValue, 300);
-
-// Local storage with type safety
-const [theme, setTheme] = useLocalStorage("theme", "light");
-
-// Mobile detection
-const isMobile = useIsMobile();
-```
-
-## Page Structure
-
-```typescript
-// pages/sample/SamplePage.tsx
-export function SamplePage() {
-  const [filters, setFilters] = useState<Filters>({});
-  const [editItem, setEditItem] = useState<Sample | null>(null);
-
-  const { data, isLoading } = useSamples(filters);
-
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Title</h1>
-          <p className="text-sm text-muted-foreground">Description</p>
-        </div>
-        <ActionButtons />
-      </div>
-
-      {/* Filters */}
-      <Filters filters={filters} onChange={setFilters} />
-
-      {/* Content */}
-      {isLoading ? <PageLoader /> : <Content />}
-    </div>
-  );
-}
-```
-
-## DOs
-
-- Use shared components from `@/components/shared/`
-- Follow form pattern with FormProvider
-- Use Zod for validation
-- Use React Query for data fetching
-- Use Radix UI primitives (Dialog, Sheet, Dropdown, etc.)
-- Use Lucide React for icons
-- Use Tailwind classes, never inline styles
+- [Page Template](templates/page-template.md) — Standard page structure with header, filters, content
+- [Form Template](templates/form-template.md) — React Hook Form + Zod pattern
 
 ## DON'Ts
 
-- DON'T create duplicate components - use shared ones
-- DON'T use native `<form>` - use `<Form>` component
-- DON'T write custom search inputs - use `<SearchInput>`
-- DON'T write custom badges - use `<StatusBadge>`
-- DON'T write custom pagination - use `<TablePagination>`
-- DON'T write custom loading states - use `<PageLoader>`
+- DON'T create duplicate components — use shared ones
+- DON'T use native `<form>` — use `<Form>` component
+- DON'T write custom search/badge/pagination/loading — use shared components
 - DON'T modify shadcn/ui components in `components/ui/`
-- DON'T use inline styles - use Tailwind classes
+- DON'T use inline styles — use Tailwind classes
+- DON'T use `any` type — use proper TypeScript types
+
+## Related Skills
+
+- `design-system` — **Read FIRST** before any UI work. Project's visual identity (colors, glassmorphism, spacing, icons)
