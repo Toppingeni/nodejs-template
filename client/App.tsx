@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/theme";
 import { LayoutProvider } from "@/contexts/LayoutContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { queryClient } from "@/tanstackQuery";
+import { ErrorBoundary } from "@/components/shared/error/ErrorBoundary";
 import { generateRoutes } from "./router/routes";
 import "./global.css";
 
@@ -21,15 +22,17 @@ function App() {
         <StrictMode>
             <QueryClientProvider client={queryClient}>
                 <AuthProvider>
-                    <UserRoleProvider>
-                        <ThemeProvider>
-                            <LayoutProvider>
-                                <TooltipProvider>
-                                    <RouterProvider router={router} />
-                                </TooltipProvider>
-                            </LayoutProvider>
-                        </ThemeProvider>
-                    </UserRoleProvider>
+                    <ErrorBoundary>
+                        <UserRoleProvider>
+                            <ThemeProvider>
+                                <LayoutProvider>
+                                    <TooltipProvider>
+                                        <RouterProvider router={router} />
+                                    </TooltipProvider>
+                                </LayoutProvider>
+                            </ThemeProvider>
+                        </UserRoleProvider>
+                    </ErrorBoundary>
                     <Toaster />
                     <Sonner />
                     {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

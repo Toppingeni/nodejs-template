@@ -1,12 +1,11 @@
-import usersRepository from "../repositories/usersRepository";
+import { usersRepository } from "../repositories/usersRepository";
+import { convertSnakeToCamelCase } from "../utils/keyConverter";
 
-export class UserService {
-    // Injecting the repository ensures dependency injection principles are met for testing
-    constructor(private readonly repo: typeof usersRepository) {}
-
+class UsersService {
     async getUsers() {
-        return await this.repo.getUsers();
+        const rows = await usersRepository.getUsers();
+        return convertSnakeToCamelCase(rows);
     }
 }
 
-export default new UserService(usersRepository);
+export const usersService = new UsersService();

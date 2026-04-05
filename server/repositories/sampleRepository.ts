@@ -1,19 +1,53 @@
-import { getOracle } from "../libs/oracle";
+import BaseRepository from "./baseRepository";
+import type { BindParams } from "../utils/pagination";
 import type { SampleRow, SampleFilters } from "../../shared/types/sample";
 
-class SampleRepository {
-    private get oracle() {
-        return getOracle();
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type SampleCreate = {
+    id: string;
+    name: string;
+    description?: string;
+    createdBy: string;
+};
+
+type SampleUpdate = {
+    name?: string;
+    description?: string;
+    updatedBy: string;
+};
+
+// ---------------------------------------------------------------------------
+// Repository
+// ---------------------------------------------------------------------------
+
+class SampleRepository extends BaseRepository<SampleRow, SampleCreate, SampleUpdate> {
+    get tableName(): string {
+        return "SAMPLE_TABLE";
     }
+
+    get primaryKey(): string {
+        return "ID";
+    }
+
+    get selectColumns(): string {
+        return "ID, NAME, DESCRIPTION, STATUS, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY";
+    }
+
+    // -------------------------------------------------------------------------
+    // Overrides — search filter requires LIKE, not simple equality
+    // -------------------------------------------------------------------------
 
     /** ดึงรายการทั้งหมด พร้อม filter */
     async findAll(filters?: SampleFilters): Promise<SampleRow[]> {
         let sql = `
-      SELECT ID, NAME, DESCRIPTION, STATUS, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY
-      FROM SAMPLE_TABLE
-      WHERE STATUS = 'A'
-    `;
-        const params: Record<string, unknown> = {};
+            SELECT ${this.selectColumns}
+            FROM ${this.tableName}
+            WHERE STATUS = 'A'`;
+
+        const params: BindParams = {};
 
         if (filters?.search) {
             sql += ` AND (UPPER(NAME) LIKE UPPER(:search) OR UPPER(DESCRIPTION) LIKE UPPER(:search))`;
@@ -25,46 +59,28 @@ class SampleRepository {
         return this.oracle.query<SampleRow>(sql, params);
     }
 
-    /** ดึงข้อมูลตาม ID */
-    async findById(id: string): Promise<SampleRow | null> {
-        const sql = `
-      SELECT ID, NAME, DESCRIPTION, STATUS, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY
-      FROM SAMPLE_TABLE
-      WHERE ID = :id AND STATUS = 'A'
-    `;
-        const rows = await this.oracle.query<SampleRow>(sql, { id });
-        return rows[0] || null;
-    }
+    // -------------------------------------------------------------------------
+    // Abstract implementations
+    // -------------------------------------------------------------------------
 
     /** สร้างข้อมูลใหม่ */
-    async create(data: {
-        id: string;
-        name: string;
-        description?: string;
-        createdBy: string;
-    }) {
+    async create(data: SampleCreate): Promise<void> {
         const sql = `
-      INSERT INTO SAMPLE_TABLE (ID, NAME, DESCRIPTION, STATUS, CREATED_AT, CREATED_BY)
-      VALUES (:id, :name, :description, 'A', SYSDATE, :createdBy)
-    `;
-        return this.oracle.command(sql, {
+            INSERT INTO ${this.tableName} (ID, NAME, DESCRIPTION, STATUS, CREATED_AT, CREATED_BY)
+            VALUES (:id, :name, :description, 'A', SYSDATE, :createdBy)`;
+
+        await this.oracle.command(sql, {
             id: data.id,
             name: data.name,
-            description: data.description || null,
+            description: data.description ?? null,
             createdBy: data.createdBy,
         });
     }
 
     /** แก้ไขข้อมูล */
-    async update(
-        id: string,
-        data: { name?: string; description?: string; updatedBy: string },
-    ) {
-        const setClauses: string[] = [
-            "UPDATED_AT = SYSDATE",
-            "UPDATED_BY = :updatedBy",
-        ];
-        const params: Record<string, unknown> = {
+    async update(id: string | number, data: SampleUpdate): Promise<void> {
+        const setClauses: string[] = ["UPDATED_AT = SYSDATE", "UPDATED_BY = :updatedBy"];
+        const params: BindParams = {
             id,
             updatedBy: data.updatedBy,
         };
@@ -79,21 +95,11 @@ class SampleRepository {
         }
 
         const sql = `
-      UPDATE SAMPLE_TABLE
-      SET ${setClauses.join(", ")}
-      WHERE ID = :id AND STATUS = 'A'
-    `;
-        return this.oracle.command(sql, params);
-    }
+            UPDATE ${this.tableName}
+            SET ${setClauses.join(", ")}
+            WHERE ${this.primaryKey} = :id AND STATUS = 'A'`;
 
-    /** Soft delete */
-    async softDelete(id: string, updatedBy: string) {
-        const sql = `
-      UPDATE SAMPLE_TABLE
-      SET STATUS = 'D', UPDATED_AT = SYSDATE, UPDATED_BY = :updatedBy
-      WHERE ID = :id
-    `;
-        return this.oracle.command(sql, { id, updatedBy });
+        await this.oracle.command(sql, params);
     }
 }
 

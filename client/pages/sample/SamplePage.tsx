@@ -75,7 +75,7 @@ export function SamplePage() {
             </div>
 
             {/* Filters */}
-            <SampleFilters filters={filters} onFiltersChange={setFilters} />
+            <SampleFilters filters={filters} onChange={setFilters} />
 
             {/* Table */}
             <SampleTable

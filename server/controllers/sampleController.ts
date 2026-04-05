@@ -1,7 +1,8 @@
-import { Get, Post, Put, Delete, Route, Tags, Query, Path, Body } from "@tsoa/runtime";
+import { Get, Post, Put, Delete, Route, Tags, Query, Path, Body, Security } from "@tsoa/runtime";
 import { BaseController } from "./BaseController";
 import { sampleService } from "../services/sampleService";
-import { Sample } from "../../shared/types/sample";
+import type { Sample } from "../../shared/types/sample";
+import type { RecordStatus } from "../../shared/types/database";
 
 // ===== DTOs สำหรับ TSOA =====
 
@@ -36,6 +37,7 @@ export interface SampleCreateResponse {
 
 @Route("sample")
 @Tags("Sample")
+@Security("jwt")
 export class SampleController extends BaseController {
     /** ดึงรายการทั้งหมด */
     @Get("/")
@@ -44,7 +46,7 @@ export class SampleController extends BaseController {
         @Query() status?: string,
     ): Promise<SampleListResponse> {
         try {
-            const data = await sampleService.getAll({ search, status });
+            const data = await sampleService.getAll({ search, status: status as RecordStatus });
             return this.handleSuccess(data, "ดึงข้อมูลสำเร็จ");
         } catch (error) {
             this.handleError(error, "SampleController.getAll");

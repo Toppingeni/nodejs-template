@@ -1,28 +1,19 @@
-import usersService from "../services/usersService";
-import { Controller, Get, Route, Tags } from "@tsoa/runtime";
-
-export type UserDto = {
-    user_id: string;
-    user_name: string;
-};
-
-export type GetUsersResponse = {
-    message: string;
-    data: UserDto[];
-};
+import { Get, Route, Tags } from "@tsoa/runtime";
+import { BaseController } from "./BaseController";
+import { usersService } from "../services/usersService";
 
 @Route("users")
 @Tags("Users")
-export class UsersController extends Controller {
+export class UsersController extends BaseController {
+    /** Get all active users */
     @Get("/")
-    public async getUsers(): Promise<GetUsersResponse> {
-        const users = await usersService.getUsers();
-        const data: UserDto[] = users.map((u) => ({
-            user_id: String(u.user_id),
-            user_name: String(u.user_name),
-        }));
-
-        return { message: "Success", data };
+    public async getUsers(): Promise<{ message: string; data: unknown[] }> {
+        try {
+            const data = await usersService.getUsers();
+            return this.handleSuccess(data, "Success");
+        } catch (error) {
+            this.handleError(error, "UsersController.getUsers");
+        }
     }
 }
 
