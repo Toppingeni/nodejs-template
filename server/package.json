@@ -11,7 +11,9 @@
         "tsoa:gen": "npm run tsoa:spec && npm run tsoa:routes",
         "test": "vitest run",
         "test:watch": "vitest",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage",
+        "mapsql": "tsx scripts/mapsql.ts",
+        "downsql": "tsx scripts/mapsql.ts --download"
     },
     "dependencies": {
         "@types/jsonwebtoken": "^9.0.10",
