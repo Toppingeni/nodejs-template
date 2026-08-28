@@ -1,6 +1,6 @@
 # Schema Template
 
-Use this format when saving table schemas to `src/schema/<table>.md`.
+Use this format when saving table schemas to `server/schema/<table>.md`.
 
 ## Format
 
@@ -17,7 +17,7 @@ columns:
 | `NN`   | Not null    |
 | `NULL` | Nullable    |
 
-## Example (`src/schema/users.md`)
+## Example (`server/schema/users.md`)
 
 ```text
 columns:

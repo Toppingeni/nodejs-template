@@ -28,7 +28,7 @@ Step 4: Create Service
     ↓
 Step 5: Create Controller
     ↓
-Step 6: Generate TSOA Routes (npm run tsoa:gen)
+Step 6: Generate TSOA Routes (pnpm tsoa:gen)
     ↓
 Step 7: Verify
 ```
@@ -46,7 +46,7 @@ Step 7: Verify
 
 ### SQL_NO Resolution
 
-1. Scan existing files in `src/sqltabs/` for the same APP_ID
+1. Scan existing files in `server/sqltabs/` for the same APP_ID
 2. Pick next unused number (starts at 1, increments by 1)
 3. If uncertain → **ask the user immediately**
 
@@ -61,7 +61,7 @@ Step 7: Verify
 
 Invoke skill: **`oracle-schema-cache`**
 
-- Check `src/schema/<table>.md` for each table you'll query
+- Check `server/schema/<table>.md` for each table you'll query
 - If missing: fetch via Oracle MCP and save using the [schema template](../oracle-schema-cache/templates/schema-template.md)
 - **Must have**: column name, type/length, nullable, PK
 
@@ -71,7 +71,7 @@ Invoke skill: **`oracle-schema-cache`**
 
 Invoke skill: **`oracle-sqltab-generator`**
 
-- Create `src/sqltabs/<APP_ID>_<SQL_NO>.sql` for each query (1 statement per file)
+- Create `server/sqltabs/<APP_ID>_<SQL_NO>.sql` for each query (1 statement per file)
 - Use bind parameters (`:param`) — never string concatenation
 - For dynamic queries, use placeholders: `/*where*/`, `/*orderBy*/`
 - Oracle 11g: NEVER use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
@@ -130,13 +130,13 @@ Key rules:
 ## Step 6: Generate TSOA Routes
 
 ```bash
-npm run tsoa:gen
+pnpm tsoa:gen
 ```
 
 **ALWAYS run this after adding or editing a controller.** Never edit generated files:
 
-- `src/tsoa/routes.ts` — auto-generated
-- `src/tsoa/swagger.json` — auto-generated
+- `server/tsoa/routes.ts` — auto-generated
+- `server/tsoa/swagger.json` — auto-generated
 
 ---
 
@@ -144,12 +144,12 @@ npm run tsoa:gen
 
 ### Checklist
 
-- [ ] Schema cache exists in `src/schema/` for all used tables
-- [ ] SQLTab files exist in `src/sqltabs/` for all queries
+- [ ] Schema cache exists in `server/schema/` for all used tables
+- [ ] SQLTab files exist in `server/sqltabs/` for all queries
 - [ ] Repository uses `#region Query` and `#region Command`
 - [ ] Service validates input with Zod before calling repository
 - [ ] Controller extends BaseController with TSOA decorators
-- [ ] Ran `npm run tsoa:gen` after controller changes
+- [ ] Ran `pnpm tsoa:gen` after controller changes
 - [ ] No business logic in controller
 - [ ] All SQL uses bind parameters (no string concatenation)
 - [ ] No Oracle 11g incompatible SQL (`FETCH FIRST`, `OFFSET`, `JSON_TABLE`)

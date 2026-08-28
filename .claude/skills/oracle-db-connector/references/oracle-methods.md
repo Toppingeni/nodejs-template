@@ -118,7 +118,7 @@ export const callUserProcedure = async (userId: number) => {
 ```typescript
 import { oracle } from "../../libs/oracle";
 
-// SQL_NO 1 reads from src/sqltabs/<APP_ID>_1.sql (dev) or SQL_TAB_OPPN (prod)
+// SQL_NO 1 reads from server/sqltabs/<APP_ID>_1.sql (dev) or SQL_TAB_OPPN (prod)
 const result = await oracle.queryFromSqlTab<IUserRow>(1, { status: "ACTIVE" });
 ```
 

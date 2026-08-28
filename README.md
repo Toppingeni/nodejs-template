@@ -29,7 +29,7 @@ cd your-repo
 2. Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 3. Set up environment variables:
@@ -59,33 +59,33 @@ igs-vault append global/data/dev/windows .env
 Development:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Production:
 
 ```bash
-npm run build
+pnpm build
 npm start
 ```
 
 ## AI Prompt Guide (SQLTab / Inline SQL)
 
-> Oracle 11g; Dev อ่าน `src/sqltabs/<APP_ID>_<SQL_NO>.sql` ก่อน (SQL_NO เริ่ม 1)
+> Oracle 11g; Dev อ่าน `server/sqltabs/<APP_ID>_<SQL_NO>.sql` ก่อน (SQL_NO เริ่ม 1)
 
 ### 1) วิธีสั่งให้ AI เขียนผ่าน SQLTab (แนะนำ)
 
 ```text
 ทำ API TSOA (C->S->Repo) ใช้ SQLTab เท่านั้น (ห้าม inline)
-APP_ID=<id>; SQL_NO=<auto next>; table=<TABLE>; เช็ค schema ใน src/schema (ถ้าไม่มีให้ใช้ Oracle MCP แล้วสร้างไฟล์)
-ขอให้สร้าง src/sqltabs/<APP_ID>_<SQL_NO>.sql + repo(queryFromSqlTab/commandFromSqlTab) + service(Zod) + controller + บอกให้รัน npm run tsoa:gen
+APP_ID=<id>; SQL_NO=<auto next>; table=<TABLE>; เช็ค schema ใน server/schema (ถ้าไม่มีให้ใช้ Oracle MCP แล้วสร้างไฟล์)
+ขอให้สร้าง server/sqltabs/<APP_ID>_<SQL_NO>.sql + repo(queryFromSqlTab/commandFromSqlTab) + service(Zod) + controller + บอกให้รัน pnpm tsoa:gen
 ```
 
 ### 2) วิธีสั่งให้ AI เขียน SQL ตรงๆ (Inline SQL)
 
 ```text
 ทำ endpoint แบบ inline SQL ได้ (ไม่ใช้ SQLTab) แต่ต้อง bind params และต้อง Oracle 11g
-เช็ค schema ใน src/schema (ถ้าไม่มีใช้ Oracle MCP แล้วสร้างไฟล์); แก้เฉพาะ Repo/Service/Controller; ไม่ต้องสร้าง src/sqltabs
+เช็ค schema ใน server/schema (ถ้าไม่มีใช้ Oracle MCP แล้วสร้างไฟล์); แก้เฉพาะ Repo/Service/Controller; ไม่ต้องสร้าง server/sqltabs
 ```
 
 ### 3) วิธีสั่งให้ AI สร้าง INSERT SQLTab (สำหรับอัปเดต DB)
@@ -93,7 +93,7 @@ APP_ID=<id>; SQL_NO=<auto next>; table=<TABLE>; เช็ค schema ใน src/s
 ```text
 สร้าง SQLTab + สคริปต์ INSERT ลง KPDBA.SQL_TAB_OPPN
 APP_ID=<id>; SQL_NO=<no>; SQL_TYPE=<1|2|3|4>; SQL_DESC=<desc>; DB_CONNECTION=OPP
-สร้าง 2 ไฟล์: src/sqltabs/<APP_ID>_<SQL_NO>.sql และ src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql (INSERT+COMMIT)
+สร้าง 2 ไฟล์: server/sqltabs/<APP_ID>_<SQL_NO>.sql และ server/sqltabs/<APP_ID>_<SQL_NO>__insert.sql (INSERT+COMMIT)
 ```
 
 ## AI Skill Prompt Guide
@@ -103,7 +103,7 @@ APP_ID=<id>; SQL_NO=<no>; SQL_TYPE=<1|2|3|4>; SQL_DESC=<desc>; DB_CONNECTION=OPP
 ```
 
 ```text
-ใช้ skill นักพัฒนา Fullstack (Developer): ขอ implement ตามแผน (C/S/Repo + sqltabs + schema) และรัน npm run lint + npm run build
+ใช้ skill นักพัฒนา Fullstack (Developer): ขอ implement ตามแผน (C/S/Repo + sqltabs + schema) และรัน pnpm lint + pnpm build
 ```
 
 ```text

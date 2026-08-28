@@ -4,7 +4,7 @@ Use for queries where the SQL structure changes at runtime (dynamic WHERE, ORDER
 
 ## SQL File with Placeholders
 
-File: `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
+File: `server/sqltabs/<APP_ID>_<SQL_NO>.sql`
 
 ```sql
 SELECT

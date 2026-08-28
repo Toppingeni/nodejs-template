@@ -216,8 +216,9 @@
 		}
 	},
 	"info": {
-		"title": "fullstack-template-server",
+		"title": "nodejs-template",
 		"version": "1.0.0",
+		"description": "Backend template — Express + TSOA + Oracle 11g",
 		"contact": {}
 	},
 	"paths": {

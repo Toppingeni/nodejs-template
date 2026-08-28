@@ -5,6 +5,7 @@ import { decodeTokenUnsafe } from "../utils/jwt";
 export const contextMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     let userId = "anonymous";
     let userName = "Anonymous";
+    let orgId: string | undefined;
     let trackingStatus: string | undefined;
 
     try {
@@ -15,6 +16,7 @@ export const contextMiddleware = (req: Request, res: Response, next: NextFunctio
             if (decoded) {
                 userId = decoded.userId;
                 userName = decoded.userName;
+                orgId = decoded.orgId;
                 trackingStatus = decoded.trackingStatus;
             }
         }
@@ -25,6 +27,7 @@ export const contextMiddleware = (req: Request, res: Response, next: NextFunctio
     const store = {
         userId,
         userName,
+        orgId,
         requestId:
             (req.headers["x-request-id"] as string) ||
             `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

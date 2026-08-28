@@ -1,6 +1,5 @@
 import { getOracle } from "../libs/oracle";
 import { writeFileSync } from "fs";
-import OracleDB, { STRING } from "oracledb";
 import { join } from "path";
 
 interface OracleColumn {
@@ -49,13 +48,9 @@ export async function createModel(table: string) {
         modelContent += `${table}.init({\n`;
         columns.forEach((col: OracleColumn) => {
             modelContent += `  ${col.COLUMN_NAME.toLowerCase()}: {\n`;
-            modelContent += `    type: DataTypes.${
-                typeMap[col.DATA_TYPE] || "STRING"
-            },\n`;
+            modelContent += `    type: DataTypes.${typeMap[col.DATA_TYPE] || "STRING"},\n`;
             if (col.DATA_TYPE === "VARCHAR2" || col.DATA_TYPE === "CHAR") {
-                modelContent += `    allowNull: ${
-                    col.NULLABLE === "Y" ? "true" : "false"
-                },\n`;
+                modelContent += `    allowNull: ${col.NULLABLE === "Y" ? "true" : "false"},\n`;
             }
             modelContent += `  },\n`;
         });
@@ -75,9 +70,7 @@ export async function createModel(table: string) {
         );
         writeFileSync(modelPath, modelContent);
 
-        console.log(
-            `Successfully created model for table ${table} at ${modelPath}`,
-        );
+        console.log(`Successfully created model for table ${table} at ${modelPath}`);
     } catch (error) {
         console.error(`Error creating model for table ${table}:`, error);
         throw error;

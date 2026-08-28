@@ -81,6 +81,6 @@ export function buildPaginatedResponse<T>(
         total,
         page,
         pageSize,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
     };
 }

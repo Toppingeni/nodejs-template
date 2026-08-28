@@ -9,5 +9,9 @@
         "emitDecoratorMetadata": true
     },
     "include": ["server/**/*.ts", "shared/**/*.ts"],
-    "references": [{ "path": "./client" }, { "path": "./server" }]
+    "references": [
+        {
+            "path": "./server"
+        }
+    ]
 }

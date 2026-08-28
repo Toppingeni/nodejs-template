@@ -4,7 +4,7 @@ Use for queries where the SQL structure is fixed — only bind parameter values 
 
 ## SELECT
 
-File: `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
+File: `server/sqltabs/<APP_ID>_<SQL_NO>.sql`
 
 ```sql
 SELECT

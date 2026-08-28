@@ -43,7 +43,7 @@ Resolution order:
 
 Resolution order:
 
-1. Scan existing files in `src/sqltabs/` for the same APP_ID, pick next unused number
+1. Scan existing files in `server/sqltabs/` for the same APP_ID, pick next unused number
 2. If DB is available, query MAX:
     ```sql
     SELECT NVL(MAX(SQL_NO), 0) AS MAX_SQL_NO
@@ -59,7 +59,7 @@ Resolution order:
 
 Invoke skill: **`oracle-schema-cache`**
 
-- Verify all table/column names against `src/schema/<table>.md`
+- Verify all table/column names against `server/schema/<table>.md`
 - If schema file is missing, fetch and save first
 - **Never write SQL without checking schema**
 
@@ -67,7 +67,7 @@ Invoke skill: **`oracle-schema-cache`**
 
 ## Step 3: Create Dev SQLTab File
 
-File: `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
+File: `server/sqltabs/<APP_ID>_<SQL_NO>.sql`
 
 Use the appropriate template from [templates/](templates/):
 
@@ -87,7 +87,7 @@ Use the appropriate template from [templates/](templates/):
 
 Only if user needs to deploy to prod/staging DB.
 
-File: `src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`
+File: `server/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`
 
 Use template: [Production INSERT Template](templates/insert-script.md)
 

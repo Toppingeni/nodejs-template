@@ -90,5 +90,5 @@ export class FeatureController extends BaseController {
 - **Zero business logic** — delegate everything to service
 - **asyncErrorWrapper** — wraps all handler logic
 - **TSOA decorators** — `@Route`, `@Tags`, `@Get/@Post/@Patch/@Delete`, `@SuccessResponse`, `@Response`
-- **After changes** — always run `npm run tsoa:gen`
-- **NEVER edit** generated `src/tsoa/routes.ts` or `src/tsoa/swagger.json`
+- **After changes** — always run `pnpm tsoa:gen`
+- **NEVER edit** generated `server/tsoa/routes.ts` or `server/tsoa/swagger.json`

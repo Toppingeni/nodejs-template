@@ -34,7 +34,7 @@ Phase 4: Code Review (agent: code-reviewer)
 1. **What**: What endpoint/feature are you building? (CRUD, report, workflow?)
 2. **Tables**: Which Oracle tables are involved?
 3. **APP_ID**: What is the APP_ID for this system? (check `.env` or `config.APP_ID` first)
-4. **SQL_NO**: Check existing files in `src/sqltabs/` to determine next available number
+4. **SQL_NO**: Check existing files in `server/sqltabs/` to determine next available number
 
 ### Decision Point: Route to Correct Workflow
 
@@ -56,7 +56,7 @@ Before writing any code, prepare the database layer.
 
 Invoke skill: **`oracle-schema-cache`**
 
-- Check `src/schema/<table>.md` for each table involved
+- Check `server/schema/<table>.md` for each table involved
 - If missing: fetch via Oracle MCP (`mcp__oracle__getOracleTableSchema`) and save in compact format
 - Verify column names, types, and constraints before writing SQL
 
@@ -65,15 +65,15 @@ Invoke skill: **`oracle-schema-cache`**
 Invoke skill: **`oracle-sqltab-generator`**
 
 - Determine APP_ID (from `.env` or ask user)
-- Determine next SQL_NO (scan `src/sqltabs/` for existing files)
-- Create `src/sqltabs/<APP_ID>_<SQL_NO>.sql` for each query needed
+- Determine next SQL_NO (scan `server/sqltabs/` for existing files)
+- Create `server/sqltabs/<APP_ID>_<SQL_NO>.sql` for each query needed
 - Use bind parameters (`:param`) — never concatenate strings
 - Oracle 11g restrictions: NEVER use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
 
 ### Output of Phase 2
 
-- Schema files in `src/schema/` for all tables used
-- SQLTab `.sql` files in `src/sqltabs/` for all queries needed
+- Schema files in `server/schema/` for all tables used
+- SQLTab `.sql` files in `server/sqltabs/` for all queries needed
 - Clear mapping: which SQL_NO does what
 
 **Present to user and get approval before proceeding.**
@@ -97,8 +97,8 @@ Launch the **backend-builder** agent with a prompt that includes:
     - Service: business logic + Zod validation, `#region Query` / `#region Command`
     - Repository: uses `queryFromSqlTab`/`commandFromSqlTab`, `#region Query` / `#region Command`
     - TSOA decorators on controller (`@Route`, `@Get`, `@Post`, `@Tags`, `@Security`)
-    - After controller changes: run `npm run tsoa:gen`
-    - NEVER edit generated files (`src/tsoa/routes.ts`, `src/tsoa/swagger.json`)
+    - After controller changes: run `pnpm tsoa:gen`
+    - NEVER edit generated files (`server/tsoa/routes.ts`, `server/tsoa/swagger.json`)
 5. Related skills for Oracle patterns:
     - `oracle-db-connector` — Oracle connection, query, stored procedure patterns
     - `oracle-sqltab-generator` — SQLTab usage with `queryFromSqlTab`/`commandFromSqlTab`
@@ -108,7 +108,7 @@ Launch the **backend-builder** agent with a prompt that includes:
 - Controller with TSOA decorators
 - Service with Zod validation + business logic
 - Repository with SQLTab integration
-- Updated TSOA routes (via `npm run tsoa:gen`)
+- Updated TSOA routes (via `pnpm tsoa:gen`)
 
 ---
 
@@ -137,10 +137,10 @@ Launch the **code-reviewer** agent to check:
 
 ## Commands
 
-- `npm run dev` — Start dev server
-- `npm run lint` — Lint code
-- `npm run build` — Build (auto-runs TSOA)
-- `npm run tsoa:gen` — Regenerate TSOA routes after controller changes
+- `pnpm dev` — Start dev server
+- `pnpm lint` — Lint code
+- `pnpm build` — Build (auto-runs TSOA)
+- `pnpm tsoa:gen` — Regenerate TSOA routes after controller changes
 
 ## References
 

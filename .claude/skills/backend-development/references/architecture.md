@@ -32,15 +32,15 @@ src/
 - Controller: `src/controllers/<name>Controller.ts`
 - Service: `src/services/<name>Service.ts`
 - Repository: `src/repositories/<name>Repository.ts`
-- SQLTab: `src/sqltabs/<APP_ID>_<SQL_NO>.sql`
-- Schema: `src/schema/<table>.md`
+- SQLTab: `server/sqltabs/<APP_ID>_<SQL_NO>.sql`
+- Schema: `server/schema/<table>.md`
 
 ## Key Rules
 
-1. **NEVER edit** `src/tsoa/routes.ts` or `src/tsoa/swagger.json` — these are generated
-2. **ALWAYS run** `npm run tsoa:gen` after controller changes
+1. **NEVER edit** `server/tsoa/routes.ts` or `server/tsoa/swagger.json` — these are generated
+2. **ALWAYS run** `pnpm tsoa:gen` after controller changes
 3. **ALWAYS use** bind parameters for Oracle queries
-4. **ALWAYS check** `src/schema/<table>.md` before writing SQL
+4. **ALWAYS check** `server/schema/<table>.md` before writing SQL
 5. **Oracle 11g**: NEVER use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
 
 ## Context & Logger

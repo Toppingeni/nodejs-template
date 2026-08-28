@@ -27,8 +27,41 @@ const envSchema = z.object({
     APP_ID: z.string().optional(),
     JWT_SECRET: z.string().optional(),
     ENABLE_LOGGING: z.coerce.boolean().default(true),
-    LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARN", "ERROR"]).default("DEBUG"),
+    // ค่าที่มาจาก Vault มัก escape มาพร้อม quote (`"DEBUG"`) ส่วน .env แบบ CRLF ติด
+    // whitespace มา — ถ้าไม่ normalize ก่อนเช็ค enum จะ throw "Invalid environment
+    // variables" ตั้งแต่ boot
+    LOG_LEVEL: z
+        .preprocess(
+            (v) =>
+                typeof v === "string"
+                    ? v
+                          .trim()
+                          .replace(/^["']|["']$/g, "")
+                          .toUpperCase()
+                    : v,
+            z.enum(["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]),
+        )
+        .default("DEBUG"),
     WS_LOG_SERVER_URL: z.string().optional(),
+    // ชื่อที่โผล่เป็นคอลัมน์ "service" บน tracker dashboard — โปรเจกต์ที่ลอก template นี้
+    // ต้องตั้งเอง ไม่งั้นทุกแอปจะรายงานเป็น service เดียวกันหมด
+    LOG_SERVICE_NAME: z.string().default("oppn-backend"),
+    // console แยกจาก LOG_LEVEL (ซึ่งคุม file + tracker) — ไม่ตั้ง = เปิดนอก production
+    LOG_CONSOLE: z
+        .preprocess(
+            (v) => (v === undefined || v === "" ? undefined : v === "true" || v === true),
+            z.boolean().optional(),
+        )
+        .optional(),
+    // File sink แบบ JSON-lines — รอดตอน tracker ล่ม / แอป restart
+    LOG_TO_FILE: z
+        .preprocess(
+            (v) => (v === undefined || v === "" ? undefined : v === "true" || v === true),
+            z.boolean().optional(),
+        )
+        .optional(),
+    LOG_DIR: z.string().default("logs"),
+    LOG_RETENTION_DAYS: z.coerce.number().default(14),
 });
 
 // กำหนด Object Config ทิ้งไว้ให้เป็นแบบ Mutable เพื่อนำไป import ใช้ได้เลยโดยไม่ต้อง await
@@ -46,8 +79,7 @@ const extractVaultConfig = (leaseData: unknown): Record<string, unknown> => {
     return leaseData;
 };
 
-const sleep = async (ms: number) =>
-    new Promise<void>((resolve) => setTimeout(resolve, ms));
+const sleep = async (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const isRetryableStatus = (status: number) =>
     status === 408 || status === 429 || (status >= 500 && status <= 599);
@@ -77,17 +109,11 @@ const fetchWithTimeoutAndRetry = async (
                 signal: controller.signal,
             });
 
-            if (
-                res.ok ||
-                !isRetryableStatus(res.status) ||
-                attempt === maxRetries
-            ) {
+            if (res.ok || !isRetryableStatus(res.status) || attempt === maxRetries) {
                 return res;
             }
 
-            lastError = new Error(
-                `HTTP ${res.status} ${res.statusText || ""}`.trim(),
-            );
+            lastError = new Error(`HTTP ${res.status} ${res.statusText || ""}`.trim());
         } catch (error) {
             lastError = error;
             if (attempt === maxRetries) throw error;
@@ -96,14 +122,11 @@ const fetchWithTimeoutAndRetry = async (
         }
 
         const backoffMs =
-            baseDelayMs * Math.pow(2, attempt) +
-            Math.floor(Math.random() * baseDelayMs);
+            baseDelayMs * Math.pow(2, attempt) + Math.floor(Math.random() * baseDelayMs);
         await sleep(backoffMs);
     }
 
-    throw lastError instanceof Error
-        ? lastError
-        : new Error(getErrorMessage(lastError));
+    throw lastError instanceof Error ? lastError : new Error(getErrorMessage(lastError));
 };
 
 export const initVaultConfig = async () => {
@@ -155,11 +178,7 @@ export const initVaultConfig = async () => {
             // ดึงข้อมูล Global Config
             const platform = process.platform;
             const osFolder =
-                platform === "win32"
-                    ? "windows"
-                    : platform === "darwin"
-                      ? "mac"
-                      : "linux";
+                platform === "win32" ? "windows" : platform === "darwin" ? "mac" : "linux";
             const globalPathOverride = process.env.VAULT_GLOBAL_PATH?.trim();
             const globalPath =
                 globalPathOverride && globalPathOverride.length > 0
@@ -189,9 +208,7 @@ export const initVaultConfig = async () => {
                 );
             }
         } catch (error) {
-            console.warn(
-                `[Vault Warning] Error connecting to vault: ${getErrorMessage(error)}`,
-            );
+            console.warn(`[Vault Warning] Error connecting to vault: ${getErrorMessage(error)}`);
         }
     } else {
         console.warn(
@@ -215,9 +232,7 @@ export const initVaultConfig = async () => {
 
     // 3. Assign กลับไปยัง Object `config` ที่ส่งออกไว้แต่แรก เพื่อให้ Modules อื่นอัปเดตค่าไปตาม ๆ กันทันที
     Object.assign(config, _env.data);
-    console.log(
-        `[Config] Loaded environment variables successfully for environment: ${envPrefix}`,
-    );
+    console.log(`[Config] Loaded environment variables successfully for environment: ${envPrefix}`);
 };
 
 export const initLocalEnvConfig = async () => {
@@ -229,7 +244,5 @@ export const initLocalEnvConfig = async () => {
     }
 
     Object.assign(config, _env.data);
-    console.log(
-        "[Config] Loaded environment variables successfully from process.env only",
-    );
+    console.log("[Config] Loaded environment variables successfully from process.env only");
 };

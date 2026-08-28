@@ -1,9 +1,10 @@
 import oracledb from "oracledb";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { oracleConnection } from "./oracledb";
 import { CommandsSpType } from "../../types/oracleType";
-import { convertSQL } from "../../utils/sqlHelper";
+import { buildSpCall } from "./spCall";
 import { logger } from "../../utils/logger";
 import { config } from "../../config/unifiedConfig";
 
@@ -54,12 +55,9 @@ class Oracle {
                 return result.rows ? result.rows : [];
             } catch (error: unknown) {
                 logger.logSQLError(sql, params, error);
-                console.error(error);
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Error querying Oracle database";
-                throw new Error(message);
+                    error instanceof Error ? error.message : "Error querying Oracle database";
+                throw new Error(message, { cause: error });
             }
         });
     }
@@ -69,9 +67,7 @@ class Oracle {
      * @param queries - Array of query objects
      * @returns Array of query results
      */
-    async queries<T>(
-        queries: { sql: string; params: oracledb.BindParameters }[],
-    ) {
+    async queries<T>(queries: { sql: string; params: oracledb.BindParameters }[]) {
         return await oracleConnection(this.dbName, async (connection) => {
             try {
                 const results = await Promise.all(
@@ -96,12 +92,9 @@ class Oracle {
 
                 return results;
             } catch (error: unknown) {
-                console.error(error);
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Error querying Oracle database";
-                throw new Error(message);
+                    error instanceof Error ? error.message : "Error querying Oracle database";
+                throw new Error(message, { cause: error });
             }
         });
     }
@@ -116,11 +109,7 @@ class Oracle {
         return await oracleConnection(this.dbName, async (connection) => {
             const startTime = Date.now();
             try {
-                const result = await connection.execute<T>(
-                    sql,
-                    params,
-                    this.options,
-                );
+                const result = await connection.execute<T>(sql, params, this.options);
 
                 if (result.rowsAffected && result.rowsAffected > 0) {
                     await connection.commit();
@@ -132,12 +121,9 @@ class Oracle {
                 return result;
             } catch (error: unknown) {
                 logger.logSQLError(sql, params, error);
-                console.error(error);
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Error executing Oracle command";
-                throw new Error(message);
+                    error instanceof Error ? error.message : "Error executing Oracle command";
+                throw new Error(message, { cause: error });
             }
         });
     }
@@ -164,19 +150,11 @@ class Oracle {
                                 this.options,
                             );
                             const duration = Date.now() - startTime;
-                            logger.logSQL(
-                                command.sql,
-                                command.params,
-                                duration,
-                            );
+                            logger.logSQL(command.sql, command.params, duration);
 
                             return result;
                         } catch (error: unknown) {
-                            logger.logSQLError(
-                                command.sql,
-                                command.params,
-                                error,
-                            );
+                            logger.logSQLError(command.sql, command.params, error);
                             throw error;
                         }
                     }),
@@ -209,12 +187,9 @@ class Oracle {
             } catch (error: unknown) {
                 // ถ้าเกิด error ในการ execute commands ให้ rollback
                 await connection.rollback();
-                console.error(error);
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Error executing Oracle command";
-                throw new Error(message);
+                    error instanceof Error ? error.message : "Error executing Oracle command";
+                throw new Error(message, { cause: error });
             }
         });
     }
@@ -238,11 +213,7 @@ class Oracle {
                     ...this.optionExecuteMany,
                     bindDefs,
                 } as oracledb.ExecuteManyOptions;
-                const result = await connection.executeMany<T>(
-                    sql,
-                    params,
-                    options,
-                );
+                const result = await connection.executeMany<T>(sql, params, options);
 
                 if (result.batchErrors && result.batchErrors.length > 0) {
                     await connection.rollback();
@@ -256,12 +227,9 @@ class Oracle {
                 return result;
             } catch (error: unknown) {
                 logger.logSQLError(sql, params, error);
-                console.error(error);
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Error executing Oracle command";
-                throw new Error(message);
+                    error instanceof Error ? error.message : "Error executing Oracle command";
+                throw new Error(message, { cause: error });
             }
         });
     }
@@ -271,20 +239,15 @@ class Oracle {
      * @param queries - Stored procedure configuration
      * @returns Stored procedure result
      */
-    async commandSp<T>(
-        queries: CommandsSpType,
-    ): Promise<{ rowsAffected: number; output: T }> {
+    async commandSp<T>(queries: CommandsSpType): Promise<{ rowsAffected: number; output: T }> {
         try {
             const result = await this.commandsSp([queries]);
 
             return result[0] as { rowsAffected: number; output: T };
         } catch (error: unknown) {
-            console.error(error);
             const message =
-                error instanceof Error
-                    ? error.message
-                    : "Error executing Oracle command";
-            throw new Error(message);
+                error instanceof Error ? error.message : "Error executing Oracle command";
+            throw new Error(message, { cause: error });
         }
     }
 
@@ -298,54 +261,25 @@ class Oracle {
     ): Promise<{ rowsAffected: number; output: Record<string, unknown> }[]> {
         return await oracleConnection(this.dbName, async (connection) => {
             try {
-                const startTime = Date.now();
                 const output: {
                     rowsAffected: number;
                     output: Record<string, unknown>;
                 }[] = [];
 
                 for await (const obj of queries) {
-                    const _sql = `
-              BEGIN
-              ${obj.spName}(${
-                  obj.input
-                      ? Object.keys(obj.input)
-                            .map((x) => `:${x}`)
-                            .join(", ")
-                      : ""
-              }${obj.input ? "," : ""}${
-                  obj.output
-                      ? Object.keys(obj.output)
-                            .map((x) => `:${x}`)
-                            .join(", ")
-                      : ""
-              });
-            END;`;
-
+                    // input ผ่าน driver bind ทั้งหมด ไม่ต่อ string ค่าใดๆ ลง SQL
+                    const { sql, binds } = buildSpCall(obj);
                     const convertParam = obj.input
                         ? Object.keys(obj.input).reduce((pre, curr) => {
                               return { ...pre, [curr]: obj.input![curr].value };
                           }, {})
                         : undefined;
 
-                    const sql = convertSQL("oracle", _sql, convertParam);
-
-                    const bindOutput: Record<string, unknown> = {};
-
-                    if (obj.output !== undefined) {
-                        Object.keys(obj.output).forEach((x) => {
-                            bindOutput[x] = {
-                                type: obj.output![x].type,
-                                dir: obj.output![x].dir,
-                                value: obj.output![x].value,
-                            };
-                        });
-                    }
                     const callStartTime = Date.now();
                     try {
                         const res = await connection.execute(
                             sql,
-                            bindOutput as oracledb.BindParameters,
+                            binds as oracledb.BindParameters,
                             {
                                 autoCommit: false,
                             },
@@ -362,11 +296,9 @@ class Oracle {
 
                         output.push({
                             rowsAffected: res.rowsAffected || 0,
-                            output:
-                                (res.outBinds as Record<string, unknown>) || {},
+                            output: (res.outBinds as Record<string, unknown>) || {},
                         });
                     } catch (error: unknown) {
-                        const duration = Date.now() - callStartTime;
                         logger.logSQLError(sql, convertParam, error);
                         throw error;
                     }
@@ -376,12 +308,9 @@ class Oracle {
 
                 return Promise.resolve(output);
             } catch (error: unknown) {
-                console.error(error);
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Error executing Oracle command";
-                throw new Error(message);
+                    error instanceof Error ? error.message : "Error executing Oracle command";
+                throw new Error(message, { cause: error });
             }
         });
     }
@@ -393,26 +322,32 @@ class Oracle {
      * @returns SQL statement string
      */
     async getSqlStmt(sqlNo: number, _appId?: number): Promise<string> {
-        const nodeEnv = String(
-            config.NODE_ENV || process.env.NODE_ENV || "development",
-        );
+        const nodeEnv = String(config.NODE_ENV || process.env.NODE_ENV || "development");
         const isDev = nodeEnv.startsWith("dev");
 
         const appIdRaw = _appId ?? this.appID;
-        const appId =
-            typeof appIdRaw === "number" ? appIdRaw : Number(appIdRaw);
+        const appId = typeof appIdRaw === "number" ? appIdRaw : Number(appIdRaw);
         if (!Number.isFinite(appId)) {
             throw new Error(`Invalid APP_ID: ${String(appIdRaw)}`);
         }
 
         if (isDev) {
+            // anchor ที่ไฟล์นี้ (server/libs/oracle) ไม่ใช่ cwd — เดิม default ชี้ไป
+            // `src/sqltabs` ซึ่งไม่มีอยู่จริงในโปรเจกต์นี้ (ไฟล์อยู่ `server/sqltabs`)
+            // ทำให้ dev override ไม่เคยทำงานถ้าไม่ตั้ง SQLTAB_DIR เอง
+            const moduleDir = path.dirname(fileURLToPath(import.meta.url));
             const sqltabsDir =
-                process.env.SQLTAB_DIR ||
-                path.resolve(process.cwd(), "src", "sqltabs");
-            const sqlFileName = `${appId}_${sqlNo}.sql`;
-            const sqlFilePath = path.join(sqltabsDir, sqlFileName);
+                process.env.SQLTAB_DIR || path.resolve(moduleDir, "..", "..", "sqltabs");
+            // รองรับทั้ง pad 3 หลัก (`0_001.sql` — แนะนำ) และแบบเดิมที่ไม่ pad
+            const candidates = [
+                `${appId}_${String(sqlNo).padStart(3, "0")}.sql`,
+                `${appId}_${sqlNo}.sql`,
+            ];
 
-            if (fs.existsSync(sqlFilePath)) {
+            for (const sqlFileName of candidates) {
+                const sqlFilePath = path.join(sqltabsDir, sqlFileName);
+                if (!fs.existsSync(sqlFilePath)) continue;
+
                 const raw = fs.readFileSync(sqlFilePath, "utf-8");
                 let sql = raw.trim();
                 while (sql.endsWith(";")) {
@@ -431,27 +366,29 @@ class Oracle {
         const sqlTabParams = { appId, sqlNo };
         try {
             const startTime = Date.now();
-            const result = await this.query<{ SQL_STMT: string }>(
-                sqlTab,
-                sqlTabParams,
-                {
-                    fetchInfo: {
-                        SQL_STMT: {
-                            type: oracledb.STRING as unknown as number,
-                        },
+            const result = await this.query<{ SQL_STMT: string }>(sqlTab, sqlTabParams, {
+                fetchInfo: {
+                    SQL_STMT: {
+                        type: oracledb.STRING as unknown as number,
                     },
                 },
-            );
+            });
 
             const duration = Date.now() - startTime;
             logger.logSQL(sqlTab, sqlTabParams, duration);
 
+            // SQL_NO ที่ไม่มีในตารางเดิมจะพังเป็น "Cannot read properties of undefined"
+            // ซึ่งไม่บอกอะไรเลยว่าหาอะไรไม่เจอ
+            if (!result[0]) {
+                throw new Error(
+                    `SQL_NO ${sqlNo} (app_id ${appId}) not found in KPDBA.SQL_TAB_OPPN`,
+                );
+            }
             return result[0].SQL_STMT;
         } catch (error: unknown) {
             logger.logSQLError(sqlTab, sqlTabParams, error);
-            const message =
-                error instanceof Error ? error.message : String(error);
-            throw new Error(message);
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(message, { cause: error });
         }
     }
 
@@ -461,18 +398,14 @@ class Oracle {
      * @param params - Query parameters
      * @returns Query results
      */
-    async queryFromSqlTab<T>(
-        sqlNo: number,
-        params: oracledb.BindParameters,
-    ): Promise<T[]> {
+    async queryFromSqlTab<T>(sqlNo: number, params: oracledb.BindParameters): Promise<T[]> {
         try {
             const sql = await this.getSqlStmt(sqlNo);
             const result = await this.query<T>(sql as string, params);
             return result;
         } catch (error: unknown) {
-            const message =
-                error instanceof Error ? error.message : String(error);
-            throw new Error(message);
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(message, { cause: error });
         }
     }
 
@@ -491,9 +424,8 @@ class Oracle {
             const result = await this.command<T>(sql as string, params);
             return result;
         } catch (error: unknown) {
-            const message =
-                error instanceof Error ? error.message : String(error);
-            throw new Error(message);
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(message, { cause: error });
         }
     }
 }
@@ -502,10 +434,7 @@ let oracleInstance: Oracle | undefined;
 
 export const getOracle = () => {
     if (!oracleInstance) {
-        oracleInstance = new Oracle(
-            config.ORACLE_DB_NAME || "ORCL",
-            config.APP_ID || "",
-        );
+        oracleInstance = new Oracle(config.ORACLE_DB_NAME || "ORCL", config.APP_ID || "");
     }
     return oracleInstance;
 };

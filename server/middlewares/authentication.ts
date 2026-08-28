@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { verifyToken, decodeTokenUnsafe } from "../utils/jwt";
+import { AuthenticationError } from "../errors";
 
 /**
  * TSOA authentication handler.
@@ -17,8 +18,11 @@ export function expressAuthentication(
     if (securityName === "jwt") {
         const authHeader = request.headers["authorization"];
 
+        // ต้อง reject ด้วย AuthenticationError → HTTP 401 (ไม่ใช่ 500)
+        // client interceptor ที่ refresh token อัตโนมัติดูจาก 401 — ถ้าโยน Error ธรรมดา
+        // จะหลุดไป errorHandler เป็น 500 แล้ว refresh ไม่ทำงาน
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return Promise.reject(new Error("No Bearer token provided"));
+            return Promise.reject(new AuthenticationError("No Bearer token provided"));
         }
 
         const token = authHeader.substring(7);
@@ -34,7 +38,7 @@ export function expressAuthentication(
             if (decoded) {
                 return Promise.resolve(decoded);
             }
-            return Promise.reject(new Error("Invalid or expired token"));
+            return Promise.reject(new AuthenticationError("Invalid or expired token"));
         }
     }
 

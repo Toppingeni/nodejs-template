@@ -2,23 +2,28 @@
 process.env.TZ = "Asia/Bangkok";
 
 import path from "path";
-import { fileURLToPath } from "url";
 import express from "express";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
-// ESM-compatible __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load environment variables first
-dotenv.config({
-    path: path.resolve(
-        __dirname,
-        `../.env${process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ""}`,
-    ),
-});
+// โหลด .env จาก process.cwd() เพื่อให้ dev (รันจาก repo root) และ prod
+// (dist/server/node-build.mjs ที่ PM2 รันจาก repo root) เจอไฟล์เดียวกัน
+//
+// เดิม anchor ที่ __dirname + ชื่อ `.env.<NODE_ENV>` อย่างเดียว — prod bundle จึงไปหา
+// `dist/.env.production` ซึ่งไม่มีวันมีอยู่ แล้ว boot ตายเพราะ TNS_PATH ไม่ถูก set
+// (dev ก็หา `.env.development` ไม่เจอเหมือนกัน แค่รอดมาได้เพราะ Vault เติมค่าให้)
+//
+// โหลด env-specific ก่อน (ชนะ เพราะ dotenv ไม่ override ค่าที่ตั้งแล้ว) แล้ว `.env`
+// เติมที่เหลือ. ใน production ให้ `.env` ที่ deploy เขียนมาเป็นเจ้าของค่า — ไม่งั้น
+// ตัวแปรที่รั่วมาจาก pm2 daemon (เช่น PORT) จะบัง แล้วแอป bind ผิด port
+const overrideEnv = process.env.NODE_ENV === "production";
+if (process.env.NODE_ENV) {
+    dotenv.config({
+        path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`),
+    });
+}
+dotenv.config({ path: path.resolve(process.cwd(), ".env"), override: overrideEnv });
 
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
@@ -49,9 +54,10 @@ export function createServer() {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    // Request context & logging
-    app.use(requestLogger);
+    // context ต้องมาก่อน — requestLogger อ่าน identity (userId/requestId) จากมัน
+    // แทนที่จะ decode JWT ซ้ำอีกรอบ
     app.use(contextMiddleware);
+    app.use(requestLogger);
 
     // CORS
     const corsOrigins = process.env.CORS_ORIGINS

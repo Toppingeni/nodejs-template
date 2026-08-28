@@ -4,7 +4,7 @@ Use when deploying SQLTab entries to production/staging `KPDBA.SQL_TAB_OPPN` tab
 
 ## Template
 
-File: `src/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`
+File: `server/sqltabs/<APP_ID>_<SQL_NO>__insert.sql`
 
 ```sql
 INSERT INTO KPDBA.SQL_TAB_OPPN (APP_ID, SQL_NO, SQL_TYPE, SQL_DESC, SQL_STMT, DB_CONNECTION, REVISION)

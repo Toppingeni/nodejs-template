@@ -1,9 +1,12 @@
 {
-    "entryFile": "server.ts",
+    "entryFile": "server/server.ts",
     "noImplicitAdditionalProperties": "throw-on-extras",
-    "controllerPathGlobs": ["controllers/**/*controller.ts", "controllers/**/*Controller.ts"],
+    "controllerPathGlobs": [
+        "server/controllers/**/*controller.ts",
+        "server/controllers/**/*Controller.ts"
+    ],
     "spec": {
-        "outputDirectory": "tsoa",
+        "outputDirectory": "server/tsoa",
         "specVersion": 3,
         "basePath": "/api",
         "securityDefinitions": {
@@ -15,8 +18,8 @@
         }
     },
     "routes": {
-        "routesDir": "tsoa",
+        "routesDir": "server/tsoa",
         "basePath": "/api",
-        "authenticationModule": "./middlewares/authentication"
+        "authenticationModule": "./server/middlewares/authentication"
     }
 }

@@ -10,11 +10,12 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: "node-build.ts",
+            // path ผูกกับที่อยู่ของ config ไม่ใช่ cwd — build ถูกเรียกจาก repo root
+            entry: path.resolve(__dirname, "node-build.ts"),
             formats: ["es"],
             fileName: "node-build",
         },
-        outDir: "../dist/server",
+        outDir: path.resolve(__dirname, "../dist/server"),
         emptyOutDir: true,
         target: "node22",
         ssr: true,
@@ -45,7 +46,6 @@ export default defineConfig({
                 "sequelize-oracle",
                 "tns",
                 "jsonwebtoken",
-                "multer",
                 "swagger-ui-express",
                 "zod",
             ],

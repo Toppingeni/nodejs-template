@@ -1,11 +1,11 @@
 ---
 name: "oracle-schema-cache"
-description: "Fetches and caches Oracle table schemas locally in compact format. Use BEFORE writing any SQL — check src/schema/<table>.md first; if missing, fetch via Oracle MCP and save. Ensures column names, types, and constraints are verified before query creation."
+description: "Fetches and caches Oracle table schemas locally in compact format. Use BEFORE writing any SQL — check server/schema/<table>.md first; if missing, fetch via Oracle MCP and save. Ensures column names, types, and constraints are verified before query creation."
 ---
 
 # Oracle Schema Cache
 
-Ensures table schemas are verified before writing any SQL. Schemas are cached locally in `src/schema/` to save tokens and avoid redundant MCP calls.
+Ensures table schemas are verified before writing any SQL. Schemas are cached locally in `server/schema/` to save tokens and avoid redundant MCP calls.
 
 ## When to Use
 
@@ -18,11 +18,11 @@ Ensures table schemas are verified before writing any SQL. Schemas are cached lo
 
 ### Step 1: Check if Schema Exists
 
-Look for `src/schema/<table>.md` (lowercase filename).
+Look for `server/schema/<table>.md` (lowercase filename).
 
 ```
-src/schema/users.md
-src/schema/sql_tab_oppn.md
+server/schema/users.md
+server/schema/sql_tab_oppn.md
 ```
 
 **If file exists**: Read it and proceed with your SQL work.
@@ -40,7 +40,7 @@ This returns column definitions including name, data type, length, nullable, and
 
 ### Step 3: Save in Compact Format
 
-Create `src/schema/<table>.md` using the template: [templates/schema-template.md](templates/schema-template.md)
+Create `server/schema/<table>.md` using the template: [templates/schema-template.md](templates/schema-template.md)
 
 Format: one line per column, only essential info.
 

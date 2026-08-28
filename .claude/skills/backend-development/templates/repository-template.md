@@ -19,7 +19,7 @@ class FeatureRepository {
 
     /**
      * SQL_NO 1: SELECT features with optional search/status filter
-     * SQLTab file: src/sqltabs/<APP_ID>_1.sql
+     * SQLTab file: server/sqltabs/<APP_ID>_1.sql
      */
     async getFeatures(search?: string, status?: string) {
         const oracle = getOracle();
@@ -51,7 +51,7 @@ class FeatureRepository {
 
     /**
      * SQL_NO 2: SELECT feature by ID
-     * SQLTab file: src/sqltabs/<APP_ID>_2.sql
+     * SQLTab file: server/sqltabs/<APP_ID>_2.sql
      */
     async getById(id: number) {
         const oracle = getOracle();
@@ -65,7 +65,7 @@ class FeatureRepository {
 
     /**
      * SQL_NO 3: INSERT new feature
-     * SQLTab file: src/sqltabs/<APP_ID>_3.sql
+     * SQLTab file: server/sqltabs/<APP_ID>_3.sql
      */
     async create(name: string, description?: string) {
         const oracle = getOracle();
@@ -80,10 +80,10 @@ export default new FeatureRepository();
 
 ## Rules
 
-- **SQL_NO** must match `src/sqltabs/<APP_ID>_<SQL_NO>.sql` files
+- **SQL_NO** must match `server/sqltabs/<APP_ID>_<SQL_NO>.sql` files
 - **`#region Query` / `#region Command`** — always separate reads from writes
 - **Row types** — define types matching Oracle UPPER_CASE column names exactly
 - **Bind parameters** — NEVER concatenate SQL strings; only replace structural placeholders (`/*where*/`)
 - **Dynamic queries** — use `getSqlStmt()` + placeholder replacement + `oracle.query()`
 - **Static queries** — use `queryFromSqlTab()` / `commandFromSqlTab()` directly
-- **Schema check** — verify column names against `src/schema/<table>.md` before writing SQL
+- **Schema check** — verify column names against `server/schema/<table>.md` before writing SQL

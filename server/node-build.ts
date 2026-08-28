@@ -1,77 +1,115 @@
 import path from "path";
-import express from "express";
 import { fileURLToPath } from "url";
-import {
-  config,
-  initLocalEnvConfig,
-  initVaultConfig,
-} from "./config/unifiedConfig";
+import { createRequire } from "module";
+import { config, initLocalEnvConfig, initVaultConfig } from "./config/unifiedConfig";
+
+// CJS instance — `import * as` พังใน prod bundle (initOracleClient เป็น undefined)
+const require = createRequire(import.meta.url);
+const oracledb = require("oracledb") as typeof import("oracledb");
 import { initializeDatabases } from "./bootstrap/init";
+import { closeAllPools } from "./libs/oracle/oracledb";
 import { createServer, errorHandler, notFoundHandler } from "./server";
 import { getErrorMessage } from "./utils/error";
+import { logger } from "./utils/logger";
+import { initFileSink } from "./utils/fileSink";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * ด่านสุดท้าย — อะไรที่หลุด Express ออกมาจะมาจบที่นี่
+ * logger.fatal() เขียนไฟล์แบบ sync เพราะเรา exit ทันที
+ */
+const installCrashHandlers = () => {
+    process.on("uncaughtException", (err) => {
+        logger.fatal("Uncaught exception — shutting down", { err });
+        process.exit(1);
+    });
+
+    process.on("unhandledRejection", (reason) => {
+        logger.fatal("Unhandled promise rejection — shutting down", { err: reason });
+        process.exit(1);
+    });
+};
 
 export const bootstrap = async () => {
-  try {
-    // 1. Initialize config (Vault -> fallback local env)
     try {
-      await initVaultConfig();
+        // 1. Initialize config (Vault -> fallback local env)
+        try {
+            await initVaultConfig();
+        } catch (error) {
+            console.warn(
+                `[Config Warning] initVaultConfig failed, falling back to local env: ${getErrorMessage(error)}`,
+            );
+            await initLocalEnvConfig();
+        }
+
+        // 1b. File sink — ต้องมาก่อนอย่างอื่นเพื่อให้ failure ตอน startup ลงไฟล์ด้วย
+        const fileSinkOn =
+            config.LOG_TO_FILE ?? (config.NODE_ENV === "production" || config.NODE_ENV === "prod");
+        if (fileSinkOn) {
+            initFileSink(path.resolve(process.cwd(), config.LOG_DIR), config.LOG_RETENTION_DAYS);
+        }
+
+        installCrashHandlers();
+
+        // 2. Initialize Oracle Thick mode — node-oracledb v6 default เป็น Thin mode
+        //    ซึ่ง Oracle 11g ไม่รองรับ (NJS-138) ต้องเรียกก่อน query แรกเสมอ
+        //    `clientDir` ใน createPool ไม่พอสำหรับ 11g
+        try {
+            if (config.ORACLE_CLIENT_PATH) {
+                oracledb.initOracleClient({ libDir: config.ORACLE_CLIENT_PATH });
+            } else {
+                oracledb.initOracleClient();
+            }
+        } catch (err) {
+            console.warn("[Oracle] initOracleClient failed:", getErrorMessage(err));
+        }
+
+        // 3. Initialize databases
+        await initializeDatabases();
+
+        // 4. Create Express app
+        const app = createServer();
+
+        // 5. Error handling (must be after all routes)
+        app.use(notFoundHandler);
+        app.use(errorHandler);
+
+        // 6. Start listening
+        const port = config.PORT || 3000;
+        const server = app.listen(port, () => {
+            logger.info("Server started", { port, nodeEnv: config.NODE_ENV, pid: process.pid });
+            console.log(`Server running on port ${port}`);
+            console.log(`Swagger UI available at http://localhost:${port}/docs`);
+            console.log(`API available at http://localhost:${port}/api`);
+        });
+
+        // 8. Graceful shutdown
+        // guard กัน signal ซ้ำ (pm2 ส่ง SIGINT แล้วตามด้วย SIGTERM) ไม่งั้น shutdown
+        // รันซ้อนกันแล้วเจอ NJS-064 "pool is closing"
+        let shuttingDown = false;
+        const shutdown = async (signal: string) => {
+            if (shuttingDown) return;
+            shuttingDown = true;
+            logger.info("Shutting down", { signal });
+            server.close(() => {
+                logger.info("HTTP server closed");
+            });
+            // ปิด pool ตาม alias ที่สร้างจริง ไม่งั้น connection ค้างที่ Oracle ตอน restart
+            // drain 5s ต้องน้อยกว่า pm2 kill_timeout
+            await closeAllPools(5);
+            process.exit(0);
+        };
+        process.on("SIGTERM", () => shutdown("SIGTERM"));
+        process.on("SIGINT", () => shutdown("SIGINT"));
     } catch (error) {
-      console.warn(
-        `[Config Warning] initVaultConfig failed, falling back to local env: ${getErrorMessage(error)}`,
-      );
-      await initLocalEnvConfig();
+        logger.fatal("Failed to start server", { err: error });
+        process.exit(1);
     }
-
-    // 2. Initialize databases
-    await initializeDatabases();
-
-    // 3. Create Express app
-    const app = createServer();
-
-    // 4. Serve SPA static files (production build output)
-    // Production: __dirname = dist/server/ → ../spa = dist/spa
-    const distPath = path.resolve(__dirname, "../spa");
-    app.use(express.static(distPath));
-
-    // 5. SPA fallback: non-API routes serve index.html
-    app.get(/^(?!\/api\/).*/, (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-
-    // 6. Error handling (must be after all routes)
-    app.use(notFoundHandler);
-    app.use(errorHandler);
-
-    // 7. Start listening
-    const port = config.PORT || 3000;
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-      console.log(`Swagger UI available at http://localhost:${port}/docs`);
-      console.log(`API available at http://localhost:${port}/api`);
-    });
-
-    // 8. Graceful shutdown
-    const shutdown = () => {
-      console.log("Server shutting down...");
-      process.exit(0);
-    };
-    process.on("SIGTERM", shutdown);
-    process.on("SIGINT", shutdown);
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
 };
 
 // Auto-detect: run bootstrap if executed directly or via PM2
 const currentFile = fileURLToPath(import.meta.url);
-const isMainModule =
-  process.argv[1] === currentFile ||
-  process.argv[1]?.endsWith("node-build.mjs");
+const isMainModule = process.argv[1] === currentFile || process.argv[1]?.endsWith("node-build.mjs");
 
 if (isMainModule || process.env.pm_id) {
-  bootstrap();
+    bootstrap();
 }
