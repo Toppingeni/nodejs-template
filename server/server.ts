@@ -14,16 +14,25 @@ import rateLimit from "express-rate-limit";
 // `dist/.env.production` ซึ่งไม่มีวันมีอยู่ แล้ว boot ตายเพราะ TNS_PATH ไม่ถูก set
 // (dev ก็หา `.env.development` ไม่เจอเหมือนกัน แค่รอดมาได้เพราะ Vault เติมค่าให้)
 //
-// โหลด env-specific ก่อน (ชนะ เพราะ dotenv ไม่ override ค่าที่ตั้งแล้ว) แล้ว `.env`
-// เติมที่เหลือ. ใน production ให้ `.env` ที่ deploy เขียนมาเป็นเจ้าของค่า — ไม่งั้น
-// ตัวแปรที่รั่วมาจาก pm2 daemon (เช่น PORT) จะบัง แล้วแอป bind ผิด port
-const overrideEnv = process.env.NODE_ENV === "production";
-if (process.env.NODE_ENV) {
+// ลำดับความสำคัญ: `.env.<NODE_ENV>` > `.env` > env ที่ inherit มา
+//
+// `.env` โหลดก่อนแล้ว `.env.<NODE_ENV>` ทับด้วย override — ถ้าโหลด specific ก่อน
+// แล้ว `.env` ตามด้วย override (แบบที่ทำครั้งแรก) `.env` จะชนะใน production
+// ทำให้ไฟล์ env-specific ไม่มีความหมายเลย
+//
+// ใน production `.env` โหลดด้วย override เพื่อให้ไฟล์ที่ deploy เขียนมาชนะตัวแปร
+// ที่รั่วจาก pm2 daemon (เช่น PORT ค้าง) ซึ่งจะทำให้ bind ผิด port
+// จับ NODE_ENV ไว้ก่อนโหลดไฟล์ — ถ้าอ่านทีหลัง `.env` (ที่โหลดด้วย override) จะทับ
+// ค่าไปแล้ว แล้วเราจะไปหา `.env.development` ทั้งที่ถูกสั่งมาเป็น production
+const nodeEnv = process.env.NODE_ENV;
+const isProd = nodeEnv === "production";
+dotenv.config({ path: path.resolve(process.cwd(), ".env"), override: isProd });
+if (nodeEnv) {
     dotenv.config({
-        path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`),
+        path: path.resolve(process.cwd(), `.env.${nodeEnv}`),
+        override: true,
     });
 }
-dotenv.config({ path: path.resolve(process.cwd(), ".env"), override: overrideEnv });
 
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
