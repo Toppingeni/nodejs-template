@@ -1,12 +1,48 @@
 # CLAUDE.md (OPPN)
 
-- Run: dev `npm run dev`; lint `npm run lint`; build `npm run build` (tsoa auto)
-- TSOA: never edit `src/tsoa/routes.ts`, `src/tsoa/swagger.json`; after editing controller run `npm run tsoa:gen`
-- Architecture: C->S->Repo; no biz logic in C; DB via Repo; bootstrap `src/bootstrap/`
-- Coding: extend `BaseController`+`handleSuccess()`/`handleError()`; async `asyncErrorWrapper()`; context `src/utils/context.ts`; logger `src/utils/logger.ts`; Zod
-- Oracle 11g: never use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
-- Schema: before writing SQL check `src/schema/<table>.md` / Skill `oracle-schema-cache`
-- Oracle: bind params only; use pool; see Skill `oracle-db-connector`
-- SQLTab: `queryFromSqlTab`/`commandFromSqlTab`; Dynamic `getSqlStmt`+replace placeholder (e.g. `/*where*/`)+bind; Skill `oracle-sqltab-generator`
-- Dev `getSqlStmt`: reads `src/sqltabs/<APP_ID>_<SQL_NO>.sql` first; override `SQLTAB_DIR`
-- Sequelize: watch for N+1; use `limit`/`include` only as needed
+## Backend (Server)
+
+### Tech Stack
+
+- Node.js, TypeScript
+- TSOA (OpenAPI + Controllers)
+- Oracle 11g Database
+- Sequelize ORM
+- Zod Validation
+
+### Architecture
+
+**Controller → Service → Repository**
+
+- Controller: Request/response handling, no business logic
+- Service: Business logic layer
+- Repository: Database access via SQLTab
+
+### Key Patterns
+
+- Extend `BaseController` with `handleSuccess()`/`handleError()`
+- Use `asyncErrorWrapper()` for error handling
+- Context-aware logger via AsyncLocalStorage
+- Oracle DB with bind parameters, never use `FETCH FIRST`/`OFFSET`/`JSON_TABLE`
+- SQLTab for query management: `queryFromSqlTab`, `commandFromSqlTab`, `getSqlStmt`
+
+### Commands
+
+- `pnpm dev` - Start dev server
+- `pnpm lint` - Lint code
+- `pnpm build` - Build (auto-runs TSOA)
+- `pnpm tsoa:gen` - Regenerate TSOA routes after controller changes
+
+### Important Rules
+
+- NEVER edit generated TSOA files (`server/tsoa/routes.ts`, `server/tsoa/swagger.json`)
+- Always use bind parameters for Oracle queries
+- Check table schemas in `server/schema/*.md` before writing SQL
+
+### Skills for Details
+
+- `oracle-db-connector` - Oracle connections, queries, stored procedures
+- `oracle-schema-cache` - Table schemas and column validation
+- `oracle-sqltab-generator` - SQLTab file generation and dynamic queries
+- `tsoa-api-layer-generator` - Full API layer patterns
+- `logger-system` - Context-aware logging setup

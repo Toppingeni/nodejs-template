@@ -1,10 +1,42 @@
 {
-  "permissions": {
-    "allow": [
-      "Edit(/.claude/skills/oracle-schema-cache/**)",
-      "Edit(/.claude/skills/tsoa-api-layer-generator/**)",
-      "Edit(/.claude/skills/oracle-db-connector/**)",
-      "Edit(/.claude/skills/oracle-sqltab-generator/**)"
-    ]
-  }
+    "permissions": {
+        "allow": [
+            "Edit(/.claude/skills/oracle-schema-cache/**)",
+            "Edit(/.claude/skills/tsoa-api-layer-generator/**)",
+            "Edit(/.claude/skills/oracle-db-connector/**)",
+            "Edit(/.claude/skills/oracle-sqltab-generator/**)",
+            "Bash(ls -la /Users/admin/Documents/Code/Ingeni/OPPN/nodejs-template/*.html)",
+            "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
+            "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in deps.items\\(\\) if any\\(x in k for x in ['hookform','zod','alert','select','separator','textarea','badge','skeleton','table','radix']\\)]\")",
+            "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('version','?'\\)\\)\")",
+            "Bash(pnpm install:*)",
+            "Bash(node -e \"import\\('tsoa'\\).then\\(m => console.log\\(Object.keys\\(m\\)\\)\\)\")",
+            "Bash(node -e \"const p = require\\('/Users/admin/Documents/Code/Ingeni/OPPN/nodejs-template/server/node_modules/tsoa/package.json'\\); console.log\\(JSON.stringify\\({type: p.type, main: p.main, module: p.module, exports: p.exports}, null, 2\\)\\)\")",
+            "Bash(tsx --version)",
+            "Bash(npx tsx:*)",
+            "Bash(node -e \"const tsoa = require\\('tsoa'\\); console.log\\(typeof tsoa.Controller, typeof tsoa.ValidateError\\)\")",
+            "Bash(node -e \"import\\('tsoa'\\).then\\(m => console.log\\(typeof m.Controller, typeof m.default?.Controller, typeof m.ValidateError\\)\\)\")",
+            "Bash(node -e \"const p = require\\('/Users/admin/Documents/Code/Ingeni/OPPN/nodejs-template/server/node_modules/@tsoa/runtime/package.json'\\); console.log\\(JSON.stringify\\({type: p.type, main: p.main, exports: p.exports}, null, 2\\)\\)\")",
+            "Bash(node -e \"import\\('@tsoa/runtime'\\).then\\(m => console.log\\('Controller:', typeof m.Controller, 'ValidateError:', typeof m.ValidateError\\)\\)\")",
+            "Bash(node -e \"import\\('@tsoa/runtime'\\).then\\(m => console.log\\('Controller:', typeof m.Controller, 'ValidateError:', typeof m.ValidateError, 'Get:', typeof m.Get\\)\\)\")",
+            "Bash(node -e \"const oracledb = require\\('oracledb'\\); try { oracledb.initOracleClient\\({ libDir: '/Users/admin/Documents/Code/instantclient-oracle' }\\); console.log\\('OK, thick mode:', oracledb.oracleClientVersion\\); } catch\\(e\\) { console.error\\('Error:', e.message\\); }\")",
+            "Bash(node -e \"const p = require\\('oracledb/package.json'\\); console.log\\(p.version\\)\")",
+            "Read(//Users/admin/node_modules/oracledb/**)",
+            "Bash(node -e \"console.log\\(require\\('/Users/admin/node_modules/oracledb/package.json'\\).version\\)\")",
+            "Bash(node -e ':*)",
+            "Bash(npx nodemon:*)",
+            "Bash(pnpm remove:*)",
+            "Bash(cat /Users/admin/Documents/Code/Ingeni/OPPN/nodejs-template/.env*)",
+            "Bash(npx vite:*)",
+            "Read(//Users/admin/Documents/Code/Ingeni/OPPN/kim-pai-repair-flow-new/**)",
+            "Bash(claude --version)",
+            "Bash(npx --yes vtsls --version)",
+            "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/typescript-lsp/**)",
+            "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/pyright-lsp/**)",
+            "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/example-plugin/**)",
+            "Bash(cat ~/.claude/plugins/marketplaces/claude-plugins-official/plugins/example-plugin/.claude-plugin/*)",
+            "Read(//Users/admin/.claude/plugins/marketplaces/claude-plugins-official/plugins/**)"
+        ],
+        "additionalDirectories": ["/Users/admin/node_modules/oracledb"]
+    }
 }

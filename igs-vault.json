@@ -1,0 +1,6 @@
+[
+  {
+    "path": "global/data/dev/mac",
+    "env": ".env"
+  }
+]
