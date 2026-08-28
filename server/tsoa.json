@@ -1,0 +1,25 @@
+{
+    "entryFile": "server/server.ts",
+    "noImplicitAdditionalProperties": "throw-on-extras",
+    "controllerPathGlobs": [
+        "server/controllers/**/*controller.ts",
+        "server/controllers/**/*Controller.ts"
+    ],
+    "spec": {
+        "outputDirectory": "server/tsoa",
+        "specVersion": 3,
+        "basePath": "/api",
+        "securityDefinitions": {
+            "jwt": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "routes": {
+        "routesDir": "server/tsoa",
+        "basePath": "/api",
+        "authenticationModule": "./server/middlewares/authentication"
+    }
+}

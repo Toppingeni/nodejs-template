@@ -13,6 +13,9 @@ dist/
 build/
 *.log
 
+# Log file sink (LOG_DIR)
+logs/
+
 # IDE/Editor
 .vscode/
 .idea/

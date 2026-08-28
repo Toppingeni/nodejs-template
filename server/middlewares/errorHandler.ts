@@ -1,0 +1,85 @@
+import { Request, Response, NextFunction } from "express";
+import { ValidateError } from "@tsoa/runtime";
+import { AppError } from "../errors";
+import { logger } from "../utils/logger";
+
+/**
+ * Log ที่นี่ที่เดียว ตอนที่ error object ยังครบอยู่ — เดิม error ถูกส่งกลับ client
+ * แล้วหายไปเลย ไม่มีร่องรอยที่ฝั่ง server
+ */
+function logError(err: unknown, req: Request, res: Response, statusCode: number): void {
+    res.locals.errorLogged = true;
+    // static/HMR traffic ที่ requestLogger ตั้งใจข้ามไปแล้ว
+    if (res.locals.skipLog) return;
+
+    const meta = {
+        method: req.method,
+        url: req.originalUrl,
+        statusCode,
+        err,
+    };
+
+    if (statusCode >= 500) {
+        logger.error(`Request failed: ${req.method} ${req.originalUrl}`, meta);
+    } else {
+        logger.warn(`Request rejected: ${req.method} ${req.originalUrl}`, meta);
+    }
+}
+
+interface ErrorResponse {
+    status: number;
+    message: string;
+    code?: string;
+    details?: unknown;
+    stack?: string;
+}
+
+export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
+    // TSOA validation errors
+    if (err instanceof ValidateError) {
+        const response: ErrorResponse = {
+            status: 400,
+            message: "Validation Failed",
+            code: "VALIDATION_ERROR",
+            details: err.fields,
+        };
+        logError(err, req, res, 400);
+        res.status(400).json(response);
+        return;
+    }
+
+    // Custom application errors
+    if (err instanceof AppError) {
+        const response: ErrorResponse = {
+            status: err.statusCode,
+            message: err.message,
+            code: err.code,
+        };
+        if (process.env.NODE_ENV === "development") {
+            response.stack = err.stack;
+        }
+        logError(err, req, res, err.statusCode);
+        res.status(err.statusCode).json(response);
+        return;
+    }
+
+    // Unknown errors
+    const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+    const response: ErrorResponse = {
+        status: statusCode,
+        message: err instanceof Error ? err.message : String(err),
+    };
+
+    if (process.env.NODE_ENV === "development") {
+        response.stack = err instanceof Error ? err.stack : undefined;
+    }
+
+    logError(err, req, res, statusCode);
+    res.status(statusCode).json(response);
+}
+
+export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
+    res.status(404);
+    const error = new Error(`Not Found - ${req.originalUrl}`);
+    next(error);
+}

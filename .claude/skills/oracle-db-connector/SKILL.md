@@ -1,107 +1,65 @@
 ---
 name: "oracle-db-connector"
-description: "Provides guidelines and examples for Oracle DB connections, queries, and stored procedures in this project. Invoke when working with Oracle Database, creating repositories, or writing SQL."
+description: "Guidelines for Oracle DB connections, queries, stored procedures, and transactions in this project. Use when writing repository code, executing SQL, calling stored procedures, or handling Oracle transactions. Covers query(), command(), commandSp(), and commands() patterns."
 ---
 
 # Oracle DB Connector
 
-Guidelines and examples for Oracle Database usage in this project.
+Step-by-step guide for all Oracle database operations in this project. The project uses a connection pool — never create connections manually.
+
+## When to Use
+
+- **Writing repository code** that queries or modifies Oracle data
+- **Calling stored procedures** via `commandSp`
+- **Running multiple commands in a transaction** via `commands`
+- **Debugging Oracle connection or query issues**
+
+## Core Rules (Read First)
+
+1. **NEVER create connections manually** — use the pool in `src/libs/oracle/oracledb.ts`
+2. **NEVER concatenate SQL strings** — always use bind parameters (`:paramName`)
+3. **ALWAYS import the singleton** — `import { oracle } from "../../libs/oracle"`
+4. **ALWAYS specify types** — use `.query<T>()` with a defined interface
+5. **Oracle 11g restrictions**: NEVER use `FETCH FIRST`, `OFFSET`, `JSON_TABLE`
+
+## Step-by-Step: Choose the Right Method
+
+### Decision Tree
+
+| Operation                     | Method                                        | When to Use                            |
+| ----------------------------- | --------------------------------------------- | -------------------------------------- |
+| SELECT (read)                 | `oracle.query<T>(sql, params)`                | Reading data, reports                  |
+| INSERT/UPDATE/DELETE (single) | `oracle.command(sql, params)`                 | Single write operation                 |
+| Multiple writes (transaction) | `oracle.commands([...])`                      | Multi-table inserts, atomic operations |
+| Stored procedure              | `oracle.commandSp({...})`                     | Calling PL/SQL packages                |
+| SQLTab query                  | `oracle.queryFromSqlTab<T>(sqlNo, params)`    | Reading via SQLTab                     |
+| SQLTab command                | `oracle.commandFromSqlTab(sqlNo, params)`     | Writing via SQLTab                     |
+| Dynamic SQL                   | `oracle.getSqlStmt(sqlNo)` + `oracle.query()` | SQL with dynamic WHERE/ORDER           |
+
+### After Choosing a Method
+
+1. Check schema via skill `oracle-schema-cache` — verify column names and types
+2. Write the SQL or identify the SQLTab SQL_NO
+3. Define the result type interface (for queries)
+4. Use the appropriate method from the reference: [references/oracle-methods.md](references/oracle-methods.md)
+
+---
+
+## References
+
+- [Oracle Methods](references/oracle-methods.md) — All oracle methods with full code examples
 
 ## Related Files
 
-- `src/libs/oracle/config.ts` - reads and converts connection string from `tnsnames.ora`
-- `src/libs/oracle/oracledb.ts` - manages Oracle Connection Pool
-- `src/libs/oracle/index.ts` - `Oracle` utility class (`query`, `command`, `commandSp`, etc.)
-- `src/types/oracleType.ts` - Oracle DB types
+- `src/libs/oracle/config.ts` — reads connection string from `tnsnames.ora`
+- `src/libs/oracle/oracledb.ts` — manages Oracle Connection Pool
+- `src/libs/oracle/index.ts` — `Oracle` utility class with all methods
+- `src/types/oracleType.ts` — Oracle DB types
 
----
+## Integration
 
-## Best Practices
+This skill is referenced by:
 
-1. **Never create connections manually** - project uses Connection Pool in `src/libs/oracle/oracledb.ts`
-2. **Never concatenate SQL strings** - always use bind parameters (`:paramName`) to prevent SQL injection
-3. **Use singleton instance** - import `oracle` from `src/libs/oracle/index.ts` (or `src/libs/oracle`)
-4. **Always specify types** - when using `.query<T>()`, define the result interface/type
-
----
-
-## Examples
-
-### 1. SELECT (Query)
-
-```typescript
-import { oracle } from "../../libs/oracle";
-
-interface IUserRow {
-  USER_ID: number;
-  USERNAME: string;
-}
-
-export const getActiveUsers = async () => {
-  const sql = `
-    SELECT USER_ID, USERNAME 
-    FROM USERS 
-    WHERE STATUS = :status
-  `;
-  const users = await oracle.query<IUserRow>(sql, { status: "ACTIVE" });
-  return users;
-};
-```
-
-### 2. INSERT/UPDATE/DELETE (Command)
-
-```typescript
-import { oracle } from "../../libs/oracle";
-
-export const updateUserStatus = async (userId: number, status: string) => {
-  const sql = `
-    UPDATE USERS 
-    SET STATUS = :status 
-    WHERE USER_ID = :userId
-  `;
-  const result = await oracle.command(sql, { status, userId });
-  return result.rowsAffected;
-};
-```
-
-### 3. Stored Procedure
-
-```typescript
-import { oracle } from "../../libs/oracle";
-import oracledb from "oracledb";
-
-export const callUserProcedure = async (userId: number) => {
-  const result = await oracle.commandSp({
-    spName: "PKG_USER.GET_USER_INFO",
-    input: {
-      p_user_id: { type: oracledb.NUMBER, value: userId },
-    },
-    output: {
-      p_result_cursor: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT },
-      p_error_code: { type: oracledb.STRING, dir: oracledb.BIND_OUT },
-    },
-  });
-  return result.output;
-};
-```
-
-### 4. Multiple Commands in a Single Transaction
-
-```typescript
-import { oracle } from "../../libs/oracle";
-
-export const processMultipleCommands = async () => {
-  const commands = [
-    {
-      sql: `INSERT INTO LOGS (MSG) VALUES (:msg)`,
-      params: { msg: "Step 1" },
-    },
-    {
-      sql: `UPDATE USERS SET LAST_LOGIN = SYSDATE WHERE USER_ID = :id`,
-      params: { id: 1 },
-    },
-  ];
-  // Auto-commits on success, rollbacks on any error
-  await oracle.commands(commands);
-};
-```
+- `backend-development` (Phase 3 — agent: backend-builder uses these patterns)
+- `tsoa-api-layer-generator` (Step 3 — Repository layer)
+- `oracle-sqltab-generator` (TypeScript usage section)
