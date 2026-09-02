@@ -71,7 +71,7 @@ async function ensurePool(mode: string, connectString: string): Promise<string> 
             connectString,
             poolAlias: alias,
             poolMin: 0,
-            poolMax: 10,
+            poolMax: 3,
             poolIncrement: 1,
             ...(config.ORACLE_CLIENT_PATH && {
                 clientDir: config.ORACLE_CLIENT_PATH,
@@ -82,7 +82,7 @@ async function ensurePool(mode: string, connectString: string): Promise<string> 
             logger.info("Oracle connection pool created", {
                 mode,
                 poolMin: 0,
-                poolMax: 10,
+                poolMax: 3,
             });
             return pool;
         })
