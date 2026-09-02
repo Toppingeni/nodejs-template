@@ -70,7 +70,7 @@ async function ensurePool(mode: string, connectString: string): Promise<string> 
             password: config.ORACLE_PWD || "",
             connectString,
             poolAlias: alias,
-            poolMin: 2,
+            poolMin: 0,
             poolMax: 10,
             poolIncrement: 1,
             ...(config.ORACLE_CLIENT_PATH && {
@@ -81,7 +81,7 @@ async function ensurePool(mode: string, connectString: string): Promise<string> 
             createdAliases.add(alias);
             logger.info("Oracle connection pool created", {
                 mode,
-                poolMin: 2,
+                poolMin: 0,
                 poolMax: 10,
             });
             return pool;
@@ -111,7 +111,9 @@ async function oracleDB(mode: string) {
     const alias = await ensurePool(mode, appConfig[mode]);
 
     try {
-        return await oracledb.getConnection(alias);
+        const conn = await oracledb.getConnection(alias);
+        conn.module = process.env.APP_NAME ?? "nodejs-template"; // ponytail: ติดป้าย session ให้ v$session.module บอกได้ว่าแอปไหนถือ connection
+        return conn;
     } catch (err) {
         // pool เต็มหรือ DB หลุด
         logger.error("Oracle getConnection failed", { mode, err });
